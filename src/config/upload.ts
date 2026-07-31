@@ -1,0 +1,30 @@
+export const UPLOAD_CONFIG = {
+  maxImageSize: 10 * 1024 * 1024,
+  maxVideoSize: 50 * 1024 * 1024,
+  maxThumbnailSize: 2 * 1024 * 1024,
+  supportedImageTypes: [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'image/svg+xml',
+  ] as const,
+  supportedVideoTypes: [
+    'video/mp4',
+    'video/webm',
+    'video/ogg',
+  ] as const,
+  thumbnailWidth: 400,
+  thumbnailHeight: 300,
+  thumbnailQuality: 0.8,
+  imageCompressionQuality: 0.85,
+  maxImageDimension: 4096,
+  maxVideoDimension: 1920,
+  bucketName: 'portfolio-media',
+  storagePaths: {
+    videos: 'videos',
+    photos: 'photos',
+    banners: 'banners',
+    thumbnails: 'thumbnails',
+  },
+} as const

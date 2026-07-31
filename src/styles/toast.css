@@ -1,0 +1,32 @@
+import { cn } from '@/lib/utils/cn'
+
+export const toastVariants = {
+  default: cn(
+    'bg-bg border border-border-light shadow-lg',
+    'text-text'
+  ),
+  success: cn(
+    'bg-success/10 border border-success/20',
+    'text-success'
+  ),
+  error: cn(
+    'bg-error/10 border border-error/20',
+    'text-error'
+  ),
+  warning: cn(
+    'bg-warning/10 border border-warning/20',
+    'text-warning'
+  ),
+  info: cn(
+    'bg-info/10 border border-info/20',
+    'text-info'
+  ),
+}
+
+export const toastProgressStyles = {
+  default: 'bg-primary',
+  success: 'bg-success',
+  error: 'bg-error',
+  warning: 'bg-warning',
+  info: 'bg-info',
+}

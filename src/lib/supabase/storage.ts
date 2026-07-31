@@ -1,0 +1,1 @@
+export { storage } from '@/integrations/supabase/storage'

@@ -1,0 +1,1 @@
+// Contact hook placeholder for future implementation
