@@ -1,7 +1,9 @@
 import { useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { createUploadManager } from '@/upload/UploadManager'
 import { UPLOAD_CONFIG } from '@/config/upload'
+import { createPortfolioItem } from '@/services/portfolioService'
 import {
   Upload,
   Image as ImageIcon,
@@ -21,6 +23,7 @@ const categoryOptions = [
 
 export function UploadPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('photo')
@@ -97,14 +100,35 @@ export function UploadPage() {
 
     try {
       for (const file of files) {
+        let mediaUrl = ''
+        let thumbnailUrl: string | null = null
+
         if (UPLOAD_CONFIG.supportedImageTypes.includes(file.type as any)) {
-          await uploadManager.uploadImage(file, category)
+          const result = await uploadManager.uploadImage(file, category)
+          mediaUrl = result.mediaUrl
+          thumbnailUrl = result.thumbnailUrl
         } else if (UPLOAD_CONFIG.supportedVideoTypes.includes(file.type as any)) {
-          await uploadManager.uploadVideo(file, category)
+          const result = await uploadManager.uploadVideo(file, category)
+          mediaUrl = result.mediaUrl
+          thumbnailUrl = result.thumbnailUrl
         }
+
+        await createPortfolioItem({
+          title: title.trim(),
+          description: description.trim(),
+          category: category as 'video' | 'photo' | 'banner' | 'thumbnail',
+          status: 'published',
+          featured: Boolean(featured), // Forces a clear boolean true/false
+          mediaUrl,
+          thumbnailUrl,
+          altText: title.trim(),
+          order: 0,
+          metadata: { category },
+        })
       }
 
-      // Reset Form and Redirect
+      await queryClient.invalidateQueries({ queryKey: ['portfolio-items'] })
+
       setTitle('')
       setDescription('')
       setCategory('photo')
@@ -113,11 +137,12 @@ export function UploadPage() {
       setPreviews([])
       navigate('/admin/works')
     } catch {
-      // Toast error handling can be integrated here
+      // Toast error handling
     } finally {
       setIsUploading(false)
     }
-  }, [files, title, category, navigate])
+    // ADD `featured` AND `queryClient` TO THE DEPENDENCY ARRAY HERE:
+  }, [files, title, category, description, featured, navigate, queryClient])
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">

@@ -146,12 +146,23 @@ export function PortfolioGallery() {
                       )}
                     >
                       {item.thumbnailUrl ? (
-                        <img
-                          src={item.thumbnailUrl}
-                          alt={item.altText || item.title}
-                          loading="lazy"
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
+                        item.category === 'video' ? (
+                          <video
+                            src={item.mediaUrl}
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        ) : (
+                          <img
+                            src={item.thumbnailUrl}
+                            alt={item.altText || item.title}
+                            loading="lazy"
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        )
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gray-50">
                           <CategoryIcon category={item.category} />

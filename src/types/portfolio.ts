@@ -12,6 +12,7 @@ export interface PortfolioItem {
   description: string
   category: PortfolioItemCategory
   status: PortfolioItemStatus
+  featured: boolean
   mediaUrl: string
   thumbnailUrl: string | null
   altText: string
@@ -26,6 +27,7 @@ export interface PortfolioItemInput {
   description: string
   category: PortfolioItemCategory
   status: PortfolioItemStatus
+  featured: boolean
   mediaUrl: string
   thumbnailUrl: string | null
   altText: string

@@ -18,6 +18,7 @@ create table portfolio_items (
   description text not null,
   category text not null check (category in ('video', 'photo', 'banner', 'thumbnail')),
   status text not null default 'draft' check (status in ('draft', 'published', 'archived')),
+  featured boolean not null default false,
   media_url text not null,
   thumbnail_url text,
   alt_text text not null,

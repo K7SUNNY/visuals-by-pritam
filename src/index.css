@@ -1,5 +1,26 @@
 @import "tailwindcss";
 
+@theme {
+  --color-text: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-tertiary: var(--color-text-tertiary);
+  --color-text-error: var(--color-error);
+  --color-bg: var(--color-bg);
+  --color-primary: var(--color-primary);
+  --color-muted-foreground: var(--color-muted-foreground);
+  --color-card: var(--color-card);
+  --color-muted: var(--color-muted);
+  --color-divider: var(--color-divider);
+  --color-border-light: var(--color-border-light);
+  --color-surface-secondary: var(--color-surface-secondary);
+  --color-surface-tertiary: var(--color-surface-tertiary);
+  --font-heading: var(--font-heading);
+  --color-destructive: var(--color-destructive);
+  --color-input: var(--color-input);
+  --color-background: var(--color-background);
+  --color-ring: var(--color-ring);
+}
+
 @layer base {
 
   html,
