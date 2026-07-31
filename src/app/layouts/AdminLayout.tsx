@@ -4,7 +4,7 @@ import { AdminHeader } from '@/components/admin/AdminHeader'
 
 export function AdminLayout() {
   return (
-    <div className="flex min-h-screen bg-surface dark:bg-surface-dark">
+    <div className="flex min-h-screen bg-surface">
       <AdminSidebar />
       <div className="flex flex-1 flex-col">
         <AdminHeader />

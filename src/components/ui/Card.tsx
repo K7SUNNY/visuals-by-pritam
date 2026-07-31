@@ -7,6 +7,7 @@ interface CardProps {
   shadow?: 'none' | 'sm' | 'md' | 'lg'
   hover?: boolean
   onClick?: () => void
+  variant?: 'default' | 'featured'
 }
 
 const paddingMap = {
@@ -30,6 +31,7 @@ export function Card({
   shadow = 'sm',
   hover = false,
   onClick,
+  variant = 'default',
 }: CardProps) {
   return (
     <div
@@ -38,6 +40,7 @@ export function Card({
         paddingMap[padding],
         shadowMap[shadow],
         hover && 'hover:shadow-md hover:border-border transition-shadow duration-200 cursor-pointer',
+        variant === 'featured' && 'hover:scale-[1.02] transition-transform duration-200',
         className
       )}
       onClick={onClick}

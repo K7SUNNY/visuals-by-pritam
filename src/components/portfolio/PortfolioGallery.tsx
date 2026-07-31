@@ -108,40 +108,58 @@ export function PortfolioGallery() {
           initial="initial"
           whileInView="animate"
           viewport={{ once: true, margin: '-100px' }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
           <AnimatePresence>
-            {filtered.map((item) => (
-              <motion.div key={item.id} variants={fadeInUp}>
-                <Card padding="none" shadow="sm" hover className="overflow-hidden">
-                  <div className="aspect-video bg-surface relative">
-                    {item.thumbnailUrl ? (
-                      <img
-                        src={item.thumbnailUrl}
-                        alt={item.altText}
-                        loading="lazy"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <CategoryIcon category={item.category} />
-                      </div>
+            {filtered.map((item, index) => {
+              const isFeatured = index === 0 && item.category !== 'thumbnail'
+              const isWide = isFeatured && index % 3 === 0
+              return (
+                <motion.div key={item.id} variants={fadeInUp}>
+                  <Card
+                    padding="none"
+                    shadow="sm"
+                    hover
+                    variant={isFeatured ? 'featured' : 'default'}
+                    className={cn(
+                      'overflow-hidden',
+                      isWide && 'lg:col-span-2 lg:row-span-2'
                     )}
-                    <div className="absolute top-3 left-3">
-                      <Badge variant="outline">{item.category}</Badge>
+                  >
+                    <div
+                      className={cn(
+                        'bg-surface relative',
+                        isWide ? 'aspect-[4/3]' : 'aspect-video'
+                      )}
+                    >
+                      {item.thumbnailUrl ? (
+                        <img
+                          src={item.thumbnailUrl}
+                          alt={item.altText}
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <CategoryIcon category={item.category} />
+                        </div>
+                      )}
+                      <div className="absolute top-3 left-3">
+                        <Badge variant="outline">{item.category}</Badge>
+                      </div>
                     </div>
-                  </div>
-                  <div className="p-4">
-                    <Typography variant="body" weight="medium">
-                      {item.title}
-                    </Typography>
-                    <Typography variant="caption" color="secondary" className="mt-1 line-clamp-2">
-                      {item.description}
-                    </Typography>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
+                    <div className={cn(isFeatured ? 'p-5' : 'p-4')}>
+                      <Typography variant="body" weight="medium">
+                        {item.title}
+                      </Typography>
+                      <Typography variant="caption" color="secondary" className="mt-1 line-clamp-2">
+                        {item.description}
+                      </Typography>
+                    </div>
+                  </Card>
+                </motion.div>
+              )
+            })}
           </AnimatePresence>
         </motion.div>
       )}

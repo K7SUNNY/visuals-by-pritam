@@ -18,9 +18,9 @@
   --color-info: #5AC8FA;
   --color-info-light: #E1F4FD;
 
-  --color-bg: #FFFFFF;
-  --color-surface: #F2F2F7;
-  --color-surface-secondary: #E5E5EA;
+  --color-bg: #FAFAFA;
+  --color-surface: #F5F5F7;
+  --color-surface-secondary: #E8E8ED;
   --color-surface-tertiary: #D1D1D6;
 
   --color-text-primary: #000000;
@@ -35,7 +35,16 @@
 
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
     'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-heading: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
+    'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-mono: 'SF Mono', 'SF Mono Regular', 'Menlo', 'Consolas', monospace;
+
+  --color-background: #F2F2F7;
+  --color-primary-foreground: #FFFFFF;
+  --color-muted-foreground: #8E8E93;
+  --color-accent-foreground: #FFFFFF;
+  --color-input: #C6C6C8;
+  --color-ring: #007AFF;
 
   --radius-xs: 4px;
   --radius-sm: 8px;
@@ -88,8 +97,9 @@
 }
 
 .dark {
-  --color-bg: #000000;
+  --color-bg: #0A0A0A;
   --color-surface: #1C1C1E;
+  --color-surface-dark: #0A0A0A;
   --color-surface-secondary: #2C2C2E;
   --color-surface-tertiary: #3A3A3C;
 
@@ -101,6 +111,8 @@
   --color-border-light: #2C2C2E;
 
   --color-divider: #2C2C2E;
+
+  --color-background: #1C1C1E;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);

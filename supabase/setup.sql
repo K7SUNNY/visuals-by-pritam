@@ -21,7 +21,7 @@ create table portfolio_items (
   media_url text not null,
   thumbnail_url text,
   alt_text text not null,
-  order integer not null default 0,
+  "order" integer not null default 0,
   metadata jsonb,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
@@ -34,7 +34,7 @@ create table categories (
   slug text not null unique,
   description text,
   icon text,
-  order integer not null default 0,
+  "order" integer not null default 0,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

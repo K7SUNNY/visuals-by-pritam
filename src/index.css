@@ -5,12 +5,14 @@
   --color-primary: var(--color-primary);
   --color-primary-hover: var(--color-primary-hover);
   --color-primary-light: var(--color-primary-light);
+  --color-primary-foreground: var(--color-primary-foreground);
   --color-secondary: var(--color-secondary);
   --color-secondary-hover: var(--color-secondary-hover);
   --color-secondary-light: var(--color-secondary-light);
   --color-accent: var(--color-accent);
   --color-accent-hover: var(--color-accent-hover);
   --color-accent-light: var(--color-accent-light);
+  --color-accent-foreground: var(--color-accent-foreground);
 
   --color-success: var(--color-success);
   --color-success-light: var(--color-success-light);
@@ -22,20 +24,26 @@
   --color-info-light: var(--color-info-light);
 
   --color-bg: var(--color-bg);
+  --color-background: var(--color-background);
   --color-surface: var(--color-surface);
   --color-surface-secondary: var(--color-surface-secondary);
   --color-surface-tertiary: var(--color-surface-tertiary);
+  --color-surface-dark: var(--color-surface-dark);
 
   --color-text: var(--color-text-primary);
   --color-text-secondary: var(--color-text-secondary);
   --color-text-tertiary: var(--color-text-tertiary);
   --color-text-inverse: var(--color-text-inverse);
+  --color-muted-foreground: var(--color-muted-foreground);
 
   --color-border: var(--color-border);
   --color-border-light: var(--color-border-light);
+  --color-input: var(--color-input);
+  --color-ring: var(--color-ring);
   --color-divider: var(--color-divider);
 
   --font-sans: var(--font-sans);
+  --font-heading: var(--font-heading);
   --font-mono: var(--font-mono);
 
   --radius-xs: var(--radius-xs);
