@@ -10,23 +10,23 @@ import { Image, Video } from 'lucide-react'
 function CategoryIcon({ category }: { category: string }) {
   switch (category) {
     case 'video':
-      return <Video className="w-5 h-5" />
+      return <Video className="w-5 h-5 text-gray-400" />
     default:
-      return <Image className="w-5 h-5" />
+      return <Image className="w-5 h-5 text-gray-400" />
   }
 }
 
 export function FeaturedWork() {
   const { items, isLoading } = usePortfolio()
-  const featured = items.filter((i) => i.status === 'published')
+  const featured = (items || []).filter((i) => i.status === 'published')
 
   if (isLoading) {
     return (
-      <section className="container mx-auto px-4 py-16">
+      <section className="max-w-6xl mx-auto px-4 py-16">
         <Skeleton height={32} width={200} className="mb-8" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} height={300} />
+            <Skeleton key={i} height={300} className="rounded-xl" />
           ))}
         </div>
       </section>
@@ -36,12 +36,20 @@ export function FeaturedWork() {
   if (featured.length === 0) return null
 
   return (
-    <section className="container mx-auto px-4 py-16">
+    <section className="max-w-6xl mx-auto px-4 py-16 md:py-20">
       <div className="mb-8">
-        <Typography variant="overline" color="secondary" className="mb-2">
+        <Typography
+          variant="overline"
+          color="secondary"
+          className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500"
+        >
           Featured Work
         </Typography>
-        <Typography variant="h2" weight="semibold">
+        <Typography
+          variant="h2"
+          weight="semibold"
+          className="text-3xl font-bold text-gray-900 tracking-tight"
+        >
           Selected Projects
         </Typography>
       </div>
@@ -50,34 +58,41 @@ export function FeaturedWork() {
         variants={staggerContainer}
         initial="initial"
         whileInView="animate"
-        viewport={{ once: true, margin: '-100px' }}
+        viewport={{ once: true, margin: '-50px' }}
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
       >
         {featured.slice(0, 3).map((item) => (
           <motion.div key={item.id} variants={fadeInUp}>
-            <Card padding="none" shadow="sm" hover className="overflow-hidden">
-              <div className="aspect-video bg-surface relative">
+            <Card
+              padding="none"
+              shadow="sm"
+              hover
+              className="overflow-hidden group bg-white border border-gray-200/80 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md"
+            >
+              <div className="aspect-video bg-gray-100 relative overflow-hidden">
                 {item.thumbnailUrl ? (
                   <img
                     src={item.thumbnailUrl}
-                    alt={item.altText}
+                    alt={item.altText || item.title}
                     loading="lazy"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-full h-full flex items-center justify-center bg-gray-50">
                     <CategoryIcon category={item.category} />
                   </div>
                 )}
-                <div className="absolute top-3 left-3">
-                  <Badge variant="outline">{item.category}</Badge>
+                <div className="absolute top-3 left-3 z-10">
+                  <Badge variant="secondary" className="bg-white/90 backdrop-blur-md text-gray-800 text-xs font-medium border-gray-200">
+                    {item.category}
+                  </Badge>
                 </div>
               </div>
-              <div className="p-4">
-                <Typography variant="body" weight="medium">
+              <div className="p-5">
+                <Typography variant="body" weight="semibold" className="text-gray-900 text-base">
                   {item.title}
                 </Typography>
-                <Typography variant="caption" color="secondary" className="mt-1 line-clamp-2">
+                <Typography variant="caption" color="secondary" className="mt-1 text-gray-600 line-clamp-2 text-xs">
                   {item.description}
                 </Typography>
               </div>

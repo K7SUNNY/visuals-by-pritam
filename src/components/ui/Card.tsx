@@ -11,15 +11,15 @@ interface CardProps {
 }
 
 const paddingMap = {
-  none: '',
-  sm: 'p-3',
-  md: 'p-4',
-  lg: 'p-6',
+  none: 'p-0',
+  sm: 'p-4',
+  md: 'p-6',
+  lg: 'p-8',
 }
 
 const shadowMap = {
-  none: '',
-  sm: 'shadow-card',
+  none: 'shadow-none',
+  sm: 'shadow-sm',
   md: 'shadow-md',
   lg: 'shadow-lg',
 }
@@ -36,11 +36,11 @@ export function Card({
   return (
     <div
       className={cn(
-        'rounded-xl bg-bg border border-border-light',
+        'relative rounded-xl bg-white border border-gray-200 overflow-hidden transition-all duration-200',
         paddingMap[padding],
         shadowMap[shadow],
-        hover && 'hover:shadow-md hover:border-border transition-shadow duration-200 cursor-pointer',
-        variant === 'featured' && 'hover:scale-[1.02] transition-transform duration-200',
+        hover && 'hover:shadow-md hover:border-gray-300 cursor-pointer',
+        variant === 'featured' && 'border-blue-200 shadow-md hover:scale-[1.01]',
         className
       )}
       onClick={onClick}
@@ -49,11 +49,11 @@ export function Card({
       onKeyDown={
         onClick
           ? (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                onClick()
-              }
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              onClick()
             }
+          }
           : undefined
       }
     >

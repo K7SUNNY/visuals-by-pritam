@@ -14,15 +14,15 @@ interface TypographyProps {
 }
 
 const variantStyles: Record<Variant, string> = {
-  h1: 'text-4xl font-bold leading-tight tracking-tight',
-  h2: 'text-3xl font-semibold leading-tight tracking-tight',
-  h3: 'text-2xl font-semibold leading-snug tracking-tight',
-  h4: 'text-xl font-medium leading-snug',
-  h5: 'text-lg font-medium leading-normal',
+  h1: 'text-4xl md:text-6xl font-extrabold tracking-tight leading-tight',
+  h2: 'text-2xl md:text-3xl font-bold tracking-tight leading-snug',
+  h3: 'text-xl md:text-2xl font-semibold tracking-tight leading-snug',
+  h4: 'text-lg md:text-xl font-semibold leading-normal',
+  h5: 'text-base md:text-lg font-medium leading-normal',
   h6: 'text-base font-medium leading-normal',
   body: 'text-base font-normal leading-relaxed',
   caption: 'text-sm font-normal leading-normal',
-  overline: 'text-xs font-medium uppercase tracking-wider block',
+  overline: 'text-xs font-semibold uppercase tracking-wider block',
 }
 
 const variantTags: Record<Variant, React.ElementType> = {
@@ -38,16 +38,16 @@ const variantTags: Record<Variant, React.ElementType> = {
 }
 
 const weightStyles: Record<string, string> = {
-  regular: 'font-regular',
+  regular: 'font-normal',
   medium: 'font-medium',
   semibold: 'font-semibold',
   bold: 'font-bold',
 }
 
 const colorStyles: Record<string, string> = {
-  primary: 'text-text',
-  secondary: 'text-text-secondary',
-  tertiary: 'text-text-tertiary',
+  primary: 'text-gray-900',
+  secondary: 'text-gray-600',
+  tertiary: 'text-gray-400',
 }
 
 const alignStyles: Record<string, string> = {

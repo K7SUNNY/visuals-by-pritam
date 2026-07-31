@@ -46,8 +46,8 @@ export function Contact() {
   }
 
   return (
-    <section className="container mx-auto px-4 py-16" id="contact">
-      <div className="max-w-3xl mx-auto">
+    <section className="max-w-6xl mx-auto px-4 py-16 md:py-20" id="contact">
+      <div className="max-w-4xl mx-auto">
         <motion.div
           initial="initial"
           whileInView="animate"
@@ -55,10 +55,18 @@ export function Contact() {
           variants={fadeInUp}
           className="mb-8"
         >
-          <Typography variant="overline" color="secondary" className="mb-2">
+          <Typography
+            variant="overline"
+            color="secondary"
+            className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
             Contact
           </Typography>
-          <Typography variant="h2" weight="semibold">
+          <Typography
+            variant="h2"
+            weight="semibold"
+            className="text-3xl font-bold text-gray-900 tracking-tight"
+          >
             Get in Touch
           </Typography>
         </motion.div>
@@ -68,36 +76,39 @@ export function Contact() {
           whileInView="animate"
           viewport={{ once: true }}
           variants={staggerContainer}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start"
         >
+          {/* Contact Information Card */}
           <motion.div variants={fadeInUp}>
-            <Card padding="lg" shadow="sm">
-              <Typography variant="h5" weight="medium" className="mb-4">
+            <Card padding="lg" shadow="sm" className="bg-white border border-gray-200/80 p-6 rounded-xl shadow-sm space-y-6">
+              <Typography variant="h5" weight="medium" className="text-lg font-semibold text-gray-900">
                 Contact Information
               </Typography>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center">
+
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 text-gray-700">
                     <Mail className="w-5 h-5" />
                   </div>
                   <div>
-                    <Typography variant="caption" color="tertiary">
+                    <Typography variant="caption" color="tertiary" className="text-xs uppercase font-semibold text-gray-400">
                       Email
                     </Typography>
-                    <Typography variant="body">
+                    <Typography variant="body" className="text-sm font-medium text-gray-900">
                       hello@visualsbypritam.com
                     </Typography>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center">
+
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 text-gray-700">
                     <Phone className="w-5 h-5" />
                   </div>
                   <div>
-                    <Typography variant="caption" color="tertiary">
+                    <Typography variant="caption" color="tertiary" className="text-xs uppercase font-semibold text-gray-400">
                       Phone
                     </Typography>
-                    <Typography variant="body">
+                    <Typography variant="body" className="text-sm font-medium text-gray-900">
                       +1 (555) 000-0000
                     </Typography>
                   </div>
@@ -106,51 +117,54 @@ export function Contact() {
             </Card>
           </motion.div>
 
+          {/* Form Card */}
           <motion.div variants={fadeInUp}>
-            <Card padding="lg" shadow="sm">
-              <Typography variant="h5" weight="medium" className="mb-4">
+            <Card padding="lg" shadow="sm" className="bg-white border border-gray-200/80 p-6 rounded-xl shadow-sm">
+              <Typography variant="h5" weight="medium" className="text-lg font-semibold text-gray-900 mb-4">
                 Send a Message
               </Typography>
+
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <Input
                   label="Name"
                   placeholder="Your name"
+                  error={errors.name?.message}
                   {...register('name')}
                 />
-                {errors.name && (
-                  <p className="text-sm text-error">{errors.name.message}</p>
-                )}
+
                 <Input
                   label="Email"
                   type="email"
                   placeholder="your@email.com"
+                  error={errors.email?.message}
                   {...register('email')}
                 />
-                {errors.email && (
-                  <p className="text-sm text-error">{errors.email.message}</p>
-                )}
+
                 <div>
-                  <label className="block text-sm font-medium text-text mb-1.5">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1.5">
                     Message
                   </label>
                   <textarea
                     rows={4}
-                    className="w-full rounded-lg border border-input bg-surface px-4 py-2.5 text-text placeholder:text-text-tertiary focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none resize-none"
+                    placeholder="Your message..."
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none resize-none"
                     {...register('message')}
                   />
                   {errors.message && (
-                    <p className="text-sm text-error mt-1">
+                    <p className="mt-1 text-xs font-medium text-red-500">
                       {errors.message.message}
                     </p>
                   )}
                 </div>
+
                 <Button
                   type="submit"
                   variant="primary"
+                  className="w-full"
                   disabled={isSubmitting}
                   loading={isSubmitting}
+                  icon={<MessageCircle className="w-4 h-4" />}
                 >
-                  <MessageCircle className="w-4 h-4 mr-2" />
                   Send Message
                 </Button>
               </form>

@@ -15,20 +15,19 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full font-medium',
+        'inline-flex items-center justify-center rounded-full font-medium transition-colors select-none',
         {
-          'bg-primary/10 text-primary': variant === 'default',
-          'bg-secondary/10 text-secondary': variant === 'secondary',
-          'bg-success/10 text-success': variant === 'success',
-          'bg-warning/10 text-warning': variant === 'warning',
-          'bg-error/10 text-error': variant === 'error',
-          'bg-info/10 text-info': variant === 'info',
-          'border border-border bg-transparent text-text-secondary':
-            variant === 'outline',
+          'bg-blue-50 text-blue-700 border border-blue-200': variant === 'default',
+          'bg-gray-100 text-gray-700 border border-gray-200': variant === 'secondary',
+          'bg-emerald-50 text-emerald-700 border border-emerald-200': variant === 'success',
+          'bg-amber-50 text-amber-700 border border-amber-200': variant === 'warning',
+          'bg-red-50 text-red-700 border border-red-200': variant === 'error',
+          'bg-sky-50 text-sky-700 border border-sky-200': variant === 'info',
+          'border border-gray-300 bg-transparent text-gray-600': variant === 'outline',
         },
         {
           'px-2 py-0.5 text-xs': size === 'sm',
-          'px-2.5 py-1 text-sm': size === 'md',
+          'px-3 py-1 text-sm': size === 'md',
         },
         className
       )}
