@@ -107,7 +107,7 @@ Upload Form
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/K7SUNNY/visuals-by-pritam
 cd visuals-by-pritam
 
 # Install dependencies
@@ -234,7 +234,7 @@ The design system uses semantic tokens for colors, typography, spacing, shadows,
 
 ## License
 
-MIT
+All Rights Reserved.
 
 ## Links
 
