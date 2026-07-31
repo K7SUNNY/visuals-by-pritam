@@ -13,7 +13,7 @@ export function WavyBackground() {
         const step = 40 // Resolution of wave curve
 
         for (let x = -100; x <= width; x += step) {
-            // Combination of two sine waves to create organic, random water dips (~ effect)
+            // Combination of two sine waves to create organic water dips (~ effect)
             const y1 = Math.sin((x * frequency + phase) * (Math.PI / 180)) * amplitude
             const y2 = Math.cos((x * (frequency * 0.5) - phase) * (Math.PI / 180)) * (amplitude * 0.4)
             const y = yOffset + y1 + y2
@@ -25,6 +25,7 @@ export function WavyBackground() {
 
     return (
         <div className="fixed inset-0 pointer-events-none select-none z-0 overflow-hidden">
+            {/* SVG Wave Mesh */}
             <svg
                 className="w-full h-full opacity-45"
                 xmlns="http://www.w3.org/2000/svg"
@@ -45,8 +46,8 @@ export function WavyBackground() {
                             key={i}
                             fill="none"
                             stroke="#94a3b8" /* Subtle soft slate color */
-                            strokeWidth={i % 3 === 0 ? "1.2" : "0.75"}
-                            strokeDasharray={i % 6 === 0 ? "4 4" : "none"}
+                            strokeWidth={i % 3 === 0 ? '1.2' : '0.75'}
+                            strokeDasharray={i % 6 === 0 ? '4 4' : 'none'}
                             initial={{ d: pathA }}
                             animate={{ d: [pathA, pathB, pathC, pathA] }}
                             transition={{
@@ -58,6 +59,9 @@ export function WavyBackground() {
                     )
                 })}
             </svg>
+
+            {/* Top Blur Overlay for a Frosted/Soft Wave Effect */}
+            <div className="absolute inset-0 backdrop-blur-[1px] bg-white/10 pointer-events-none" />
         </div>
     )
 }
