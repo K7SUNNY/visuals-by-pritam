@@ -6,7 +6,7 @@ import { siteConfig } from '@/config/site'
 
 export function About() {
   return (
-    <section className="max-w-6xl mx-auto px-4 py-16 md:py-20" id="about">
+    <section className="max-w-6xl mx-auto px-4 py-16 md:py-20 bg-transparent" id="about">
       <div className="max-w-3xl mx-auto">
         <motion.div
           initial="initial"
@@ -41,7 +41,7 @@ export function About() {
           <Card
             padding="lg"
             shadow="sm"
-            className="bg-white border border-gray-200/80 shadow-sm rounded-xl p-6 md:p-8"
+            className="bg-white/70 backdrop-blur-md border border-gray-200/80 shadow-sm rounded-xl p-6 md:p-8"
           >
             <Typography
               variant="body"

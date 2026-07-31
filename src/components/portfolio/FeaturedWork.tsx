@@ -36,7 +36,7 @@ export function FeaturedWork() {
   if (featured.length === 0) return null
 
   return (
-    <section className="max-w-6xl mx-auto px-4 py-16 md:py-20">
+    <section className="max-w-6xl mx-auto px-4 py-16 md:py-20 bg-transparent">
       <div className="mb-8">
         <Typography
           variant="overline"

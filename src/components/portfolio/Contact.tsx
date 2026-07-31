@@ -46,7 +46,7 @@ export function Contact() {
   }
 
   return (
-    <section className="max-w-6xl mx-auto px-4 py-16 md:py-20" id="contact">
+    <section className="max-w-6xl mx-auto px-4 py-16 md:py-20 bg-transparent" id="contact">
       <div className="max-w-4xl mx-auto">
         <motion.div
           initial="initial"
