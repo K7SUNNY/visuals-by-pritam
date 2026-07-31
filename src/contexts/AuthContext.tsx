@@ -1,4 +1,4 @@
-import { type ReactNode, createContext, useContext, useState, useCallback } from 'react'
+import { type ReactNode, createContext, useContext, useState, useCallback, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import type { AuthUser, LoginCredentials } from '@/types/auth'
 
@@ -15,7 +15,53 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  const fetchUser = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.auth.getUser()
+      if (error) throw error
+
+      if (data.user) {
+        const profile = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single()
+
+        const role = profile?.data?.role ?? 'admin'
+
+        setUser({
+          id: data.user.id,
+          email: data.user.email ?? '',
+          role: role as AuthUser['role'],
+          displayName: data.user.user_metadata?.full_name ?? data.user.email ?? '',
+          avatarUrl: data.user.user_metadata?.avatar_url ?? null,
+        })
+      }
+    } catch {
+      setUser(null)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchUser()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        fetchUser()
+      } else {
+        setUser(null)
+        setIsLoading(false)
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [fetchUser])
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     setIsLoading(true)

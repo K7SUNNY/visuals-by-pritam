@@ -14,7 +14,15 @@ import { useAuth } from '@/contexts/AuthContext'
 import { ROLES } from '@/constants/config'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, role } = useAuth()
+  const { user, role, isLoading } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    )
+  }
 
   if (!user) {
     return <Navigate to="/login" replace />

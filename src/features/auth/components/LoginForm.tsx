@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useNavigate } from 'react-router-dom'
 import { loginSchema } from '@/lib/validations/auth'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useToast } from '@/app/providers/ToastProvider'
+import { login } from '@/features/auth'
 import type { LoginCredentials } from '@/types/auth'
 
 export function LoginForm() {
   const { success, error } = useToast()
+  const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
 
   const {
@@ -23,11 +26,12 @@ export function LoginForm() {
     },
   })
 
-  const onSubmit = async (_data: LoginCredentials) => {
+  const onSubmit = async (data: LoginCredentials) => {
     setIsLoading(true)
     try {
-      // TODO: Implement actual login with Supabase
+      await login(data)
       success('Login successful')
+      navigate('/admin/dashboard')
     } catch {
       error('Login failed')
     } finally {
