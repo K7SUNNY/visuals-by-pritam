@@ -4,6 +4,7 @@ type Variant = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'body' | 'caption' | 'o
 
 interface TypographyProps {
   variant?: Variant
+  as?: React.ElementType
   weight?: 'regular' | 'medium' | 'semibold' | 'bold'
   color?: 'primary' | 'secondary' | 'tertiary'
   align?: 'left' | 'center' | 'right'
@@ -21,7 +22,19 @@ const variantStyles: Record<Variant, string> = {
   h6: 'text-base font-medium leading-normal',
   body: 'text-base font-normal leading-relaxed',
   caption: 'text-sm font-normal leading-normal',
-  overline: 'text-xs font-medium uppercase tracking-wider',
+  overline: 'text-xs font-medium uppercase tracking-wider block',
+}
+
+const variantTags: Record<Variant, React.ElementType> = {
+  h1: 'h1',
+  h2: 'h2',
+  h3: 'h3',
+  h4: 'h4',
+  h5: 'h5',
+  h6: 'h6',
+  body: 'p',
+  caption: 'p',
+  overline: 'span',
 }
 
 const weightStyles: Record<string, string> = {
@@ -45,6 +58,7 @@ const alignStyles: Record<string, string> = {
 
 export function Typography({
   variant = 'body',
+  as,
   weight,
   color = 'primary',
   align = 'left',
@@ -52,8 +66,10 @@ export function Typography({
   className,
   children,
 }: TypographyProps) {
+  const Component = as || variantTags[variant] || 'span'
+
   return (
-    <span
+    <Component
       className={cn(
         variantStyles[variant],
         weight ? weightStyles[weight] : '',
@@ -64,6 +80,6 @@ export function Typography({
       )}
     >
       {children}
-    </span>
+    </Component>
   )
 }

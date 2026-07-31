@@ -70,14 +70,16 @@ export function PortfolioGallery() {
         </Typography>
 
         <div className="flex flex-col md:flex-row gap-4">
-          <input
-            type="text"
-            placeholder="Search works..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 rounded-lg border border-input bg-surface px-4 py-2.5 text-text placeholder:text-text-tertiary focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none text-sm"
-          />
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Search works..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-lg border border-input bg-surface px-4 py-2.5 text-text placeholder:text-text-tertiary focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none text-sm"
+            />
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-2 shrink-0">
             {categoryFilters.map((filter) => (
               <button
                 key={filter.value}
