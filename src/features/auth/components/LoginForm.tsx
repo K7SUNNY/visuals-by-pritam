@@ -4,10 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
 import { loginSchema } from '@/lib/validations/auth'
 import { useToast } from '@/app/providers/ToastProvider'
-import { login } from '@/features/auth'
+import { useAuth } from '@/contexts/AuthContext'
 import type { LoginCredentials } from '@/types/auth'
 
 export function LoginForm() {
+  const { login } = useAuth()
   const { success, error } = useToast()
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)

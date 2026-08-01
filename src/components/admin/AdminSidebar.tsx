@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
+import { useAuth } from '@/contexts/AuthContext'
 import {
   LayoutDashboard,
   FolderKanban,
@@ -24,11 +25,18 @@ interface AdminSidebarProps {
 }
 
 export function AdminSidebar({ mobileOpen = false, onMobileClose }: AdminSidebarProps) {
+  const { logout } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
 
-  const handleLogout = () => {
-    navigate('/login')
+  const handleLogout = async () => {
+    try {
+      await logout()
+    } catch (err) {
+      console.error('Failed to log out:', err)
+    } finally {
+      navigate('/login')
+    }
   }
 
   const sidebarContent = (
