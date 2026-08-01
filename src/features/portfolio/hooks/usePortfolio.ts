@@ -13,6 +13,7 @@ export function usePortfolio() {
     isLoading: itemsQuery.isLoading,
     isError: itemsQuery.isError,
     error: itemsQuery.error,
+    refetch: itemsQuery.refetch,
   }
 }
 
