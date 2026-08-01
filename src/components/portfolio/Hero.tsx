@@ -75,7 +75,7 @@ export function Hero() {
 
           <motion.h1
             variants={fadeInUp}
-            className="text-5xl sm:text-7xl md:text-8xl font-extrabold text-gray-900 tracking-tight mb-6 leading-none max-w-4xl"
+            className="text-5xl sm:text-7xl md:text-8xl font-cheri font-normal text-gray-900 tracking-wide mb-6 leading-none max-w-4xl"
           >
             Visuals by Pritam
           </motion.h1>
