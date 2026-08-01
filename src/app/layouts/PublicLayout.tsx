@@ -6,7 +6,7 @@ import { WavyBackground } from '@/components/common/WavyBackground'
 export function PublicLayout() {
   return (
     <div className="relative min-h-screen flex flex-col text-gray-900 antialiased overflow-x-hidden bg-white">
-      {/* Zoho SVG Wavy Mesh Background */}
+      {/* Background SVG / Canvas mesh */}
       <WavyBackground />
 
       <Header />
@@ -15,7 +15,13 @@ export function PublicLayout() {
         <Outlet />
       </main>
 
-      <Footer />
+      {/* 
+        Fix: Elevate Footer to z-10 and set explicit bg-white 
+        to block the background blur from bleeding into it
+      */}
+      <div className="relative z-10 bg-white">
+        <Footer />
+      </div>
     </div>
   )
 }

@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { usePortfolio } from '@/features/portfolio/hooks/usePortfolio'
 import { fadeInUp, staggerContainer } from '@/animations/variants'
-import { Image, Video, Search } from 'lucide-react'
+import { Image as ImageIcon, Video, Search } from 'lucide-react'
 
 const categoryFilters = [
   { value: 'all', label: 'All' },
@@ -19,11 +19,11 @@ const categoryFilters = [
 ]
 
 function CategoryIcon({ category }: { category: string }) {
-  switch (category) {
+  switch (category?.toLowerCase()) {
     case 'video':
       return <Video className="w-5 h-5 text-gray-400" />
     default:
-      return <Image className="w-5 h-5 text-gray-400" />
+      return <ImageIcon className="w-5 h-5 text-gray-400" />
   }
 }
 
@@ -32,12 +32,20 @@ export function PortfolioGallery() {
   const [activeFilter, setActiveFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Safe robust filtering
   const filtered = (items || []).filter((item) => {
+    // 1. Safe Category Match
+    const itemCat = (item.category || '').toLowerCase().trim()
     const matchesCategory =
-      activeFilter === 'all' || item.category === activeFilter
+      activeFilter === 'all' || itemCat === activeFilter.toLowerCase()
+
+    // 2. Safe Title & Description Search
+    const query = searchQuery.toLowerCase().trim()
+    const title = (item.title || '').toLowerCase()
+    const description = (item.description || '').toLowerCase()
     const matchesSearch =
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())
+      !query || title.includes(query) || description.includes(query)
+
     return matchesCategory && matchesSearch
   })
 
@@ -112,41 +120,40 @@ export function PortfolioGallery() {
       {filtered.length === 0 ? (
         <EmptyState
           title="No works found"
-          description="Try adjusting your search or filter."
-          icon={<CategoryIcon category="photo" />}
+          description="Try adjusting your search or category filter."
+          icon={<CategoryIcon category={activeFilter} />}
         />
       ) : (
         <motion.div
           variants={staggerContainer}
           initial="initial"
-          whileInView="animate"
-          viewport={{ once: true, margin: '-50px' }}
+          animate="animate"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          <AnimatePresence>
-            {filtered.map((item, index) => {
-              const isFeatured = index === 0 && item.category !== 'thumbnail'
-              const isWide = isFeatured && index % 3 === 0
+          <AnimatePresence mode="popLayout">
+            {filtered.map((item) => {
+              const displayMedia = item.thumbnailUrl || item.mediaUrl
+              const itemCat = (item.category || '').toLowerCase()
+
               return (
-                <motion.div key={item.id} variants={fadeInUp}>
+                <motion.div
+                  key={item.id}
+                  variants={fadeInUp}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                >
                   <Card
                     padding="none"
                     shadow="sm"
                     hover
-                    variant={isFeatured ? 'featured' : 'default'}
-                    className={cn(
-                      'overflow-hidden group bg-white border border-gray-200/80 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md',
-                      isWide && 'lg:col-span-2 lg:row-span-2'
-                    )}
+                    className="overflow-hidden group bg-white border border-gray-200/80 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md h-full flex flex-col"
                   >
-                    <div
-                      className={cn(
-                        'bg-gray-100 relative overflow-hidden',
-                        isWide ? 'aspect-[4/3]' : 'aspect-video'
-                      )}
-                    >
-                      {item.thumbnailUrl ? (
-                        item.category === 'video' ? (
+                    <div className="bg-gray-100 relative overflow-hidden aspect-video shrink-0">
+                      {displayMedia ? (
+                        itemCat === 'video' && !item.thumbnailUrl ? (
                           <video
                             src={item.mediaUrl}
                             autoPlay
@@ -157,8 +164,8 @@ export function PortfolioGallery() {
                           />
                         ) : (
                           <img
-                            src={item.thumbnailUrl}
-                            alt={item.altText || item.title}
+                            src={displayMedia}
+                            alt={item.altText || item.title || 'Work sample'}
                             loading="lazy"
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                           />
@@ -169,18 +176,31 @@ export function PortfolioGallery() {
                         </div>
                       )}
                       <div className="absolute top-3 left-3 z-10">
-                        <Badge variant="secondary" className="bg-white/90 backdrop-blur-md text-gray-800 text-xs font-medium border-gray-200">
+                        <Badge
+                          variant="secondary"
+                          className="bg-white/90 backdrop-blur-md text-gray-800 text-xs font-medium border-gray-200 capitalize"
+                        >
                           {item.category}
                         </Badge>
                       </div>
                     </div>
-                    <div className={cn(isFeatured ? 'p-6' : 'p-4')}>
-                      <Typography variant="body" weight="semibold" className="text-gray-900 text-base">
+                    <div className="p-4 flex-1">
+                      <Typography
+                        variant="body"
+                        weight="semibold"
+                        className="text-gray-900 text-base"
+                      >
                         {item.title}
                       </Typography>
-                      <Typography variant="caption" color="secondary" className="mt-1 text-gray-600 line-clamp-2 text-xs">
-                        {item.description}
-                      </Typography>
+                      {item.description && (
+                        <Typography
+                          variant="caption"
+                          color="secondary"
+                          className="mt-1 text-gray-600 line-clamp-2 text-xs"
+                        >
+                          {item.description}
+                        </Typography>
+                      )}
                     </div>
                   </Card>
                 </motion.div>
