@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { Badge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -15,6 +16,9 @@ import {
   Layers,
   FolderOpen,
   Filter,
+  CheckSquare,
+  Square,
+  Loader2,
 } from 'lucide-react'
 
 const categoryOptions = [
@@ -33,26 +37,50 @@ const statusOptions = [
 ]
 
 function WorkCard({
+  id,
   title,
   description,
   category,
   status,
+  isSelected,
+  onToggleSelect,
   onDelete,
 }: {
+  id: string
   title: string
   description: string
   category: string
   status: string
+  isSelected: boolean
+  onToggleSelect: (id: string) => void
   onDelete: () => void
 }) {
   const CategoryIcon =
     category === 'video' ? Video : category === 'banner' ? Layers : ImageIcon
 
   return (
-    <div className="p-5 rounded-xl bg-white border border-gray-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+    <div
+      className={`p-5 rounded-xl bg-white border transition-all flex flex-col justify-between relative ${isSelected
+        ? 'border-blue-500 ring-2 ring-blue-500/10 shadow-sm'
+        : 'border-gray-200/80 shadow-sm hover:shadow-md'
+        }`}
+    >
       <div>
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-3 min-w-0">
+            {/* Checkbox for Selection */}
+            <button
+              type="button"
+              onClick={() => onToggleSelect(id)}
+              className="text-gray-400 hover:text-blue-600 transition-colors cursor-pointer shrink-0"
+            >
+              {isSelected ? (
+                <CheckSquare className="w-5 h-5 text-blue-600 fill-blue-50" />
+              ) : (
+                <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+              )}
+            </button>
+
             <div className="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-700 shrink-0">
               <CategoryIcon className="w-5 h-5 text-gray-600" />
             </div>
@@ -76,7 +104,7 @@ function WorkCard({
           </Badge>
         </div>
 
-        <p className="text-xs text-gray-600 line-clamp-2 mb-4 leading-relaxed">
+        <p className="text-xs text-gray-600 line-clamp-2 mb-4 leading-relaxed pl-8">
           {description || 'No description provided.'}
         </p>
       </div>
@@ -96,12 +124,16 @@ function WorkCard({
 
 export function WorksPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [deleteConfirm, setDeleteConfirm] = useState<string | string[] | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  const { items = [], isLoading, isError, error } = usePortfolio()
+  const { items = [], isLoading, isError, error, refetch } = usePortfolio()
 
   const filtered = items.filter(
     (item: { title: string; description: string; category: string; status: string }) => {
@@ -116,12 +148,43 @@ export function WorksPage() {
     }
   )
 
-  const handleDelete = async (id: string) => {
+  // Toggle single item selection
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    )
+  }
+
+  // Toggle select all visible items
+  const handleSelectAll = () => {
+    if (selectedIds.length === filtered.length) {
+      setSelectedIds([])
+    } else {
+      setSelectedIds(filtered.map((item: { id: string }) => item.id))
+    }
+  }
+
+  // Handle single or bulk deletion with instant refresh & auto-close
+  const handleDelete = async (target: string | string[]) => {
+    setIsDeleting(true)
     try {
-      await portfolioRepository.delete(id)
+      if (Array.isArray(target)) {
+        await Promise.all(target.map((id) => portfolioRepository.delete(id)))
+        setSelectedIds([])
+      } else {
+        await portfolioRepository.delete(target)
+        setSelectedIds((prev) => prev.filter((id) => id !== target))
+      }
+
+      // 1. Instantly invalidate cache and trigger re-fetch
+      await queryClient.invalidateQueries({ queryKey: ['portfolio-items'] })
+      await refetch()
+    } catch (err) {
+      console.error('Delete error:', err)
+    } finally {
+      // 2. GUARANTEED MODAL CLOSE
+      setIsDeleting(false)
       setDeleteConfirm(null)
-    } catch {
-      // Handled by toast or mutation error
     }
   }
 
@@ -144,11 +207,14 @@ export function WorksPage() {
         <ErrorState
           title="Failed to load works"
           message={error?.message}
-          onRetry={() => { }}
+          onRetry={() => refetch()}
         />
       </div>
     )
   }
+
+  const isAllSelected =
+    filtered.length > 0 && selectedIds.length === filtered.length
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -220,6 +286,43 @@ export function WorksPage() {
         </div>
       </div>
 
+      {/* Bulk Select Control Bar */}
+      {filtered.length > 0 && (
+        <div className="flex items-center justify-between p-3.5 bg-white border border-gray-200/80 rounded-xl shadow-xs">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleSelectAll}
+              className="flex items-center gap-2 text-xs font-semibold text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
+            >
+              {isAllSelected ? (
+                <CheckSquare className="w-4 h-4 text-blue-600" />
+              ) : (
+                <Square className="w-4 h-4 text-gray-400" />
+              )}
+              <span>{isAllSelected ? 'Deselect All' : 'Select All'}</span>
+            </button>
+            {selectedIds.length > 0 && (
+              <span className="text-xs font-medium text-gray-500 border-l border-gray-200 pl-3">
+                {selectedIds.length} item{selectedIds.length > 1 ? 's' : ''}{' '}
+                selected
+              </span>
+            )}
+          </div>
+
+          {selectedIds.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setDeleteConfirm(selectedIds)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-xs transition-colors cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete Selected ({selectedIds.length})</span>
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Items Grid */}
       {filtered.length === 0 ? (
         <div className="bg-white border border-gray-200/80 rounded-xl shadow-sm p-12 text-center">
@@ -245,10 +348,13 @@ export function WorksPage() {
             }) => (
               <WorkCard
                 key={item.id}
+                id={item.id}
                 title={item.title}
                 description={item.description}
                 category={item.category}
                 status={item.status}
+                isSelected={selectedIds.includes(item.id)}
+                onToggleSelect={handleToggleSelect}
                 onDelete={() => setDeleteConfirm(item.id)}
               />
             )
@@ -261,32 +367,42 @@ export function WorksPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             className="fixed inset-0 bg-black/30 backdrop-blur-xs transition-opacity"
-            onClick={() => setDeleteConfirm(null)}
+            onClick={() => !isDeleting && setDeleteConfirm(null)}
           />
           <div className="relative z-10 w-full max-w-sm rounded-xl bg-white shadow-xl border border-gray-200 p-6 space-y-4">
             <div>
               <h3 className="text-base font-bold text-gray-900">
-                Delete Work
+                {Array.isArray(deleteConfirm)
+                  ? `Delete ${deleteConfirm.length} ${deleteConfirm.length === 1 ? 'Work' : 'Works'}`
+                  : 'Delete Work'}
               </h3>
               <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
-                Are you sure you want to delete this piece? This action cannot be undone.
+                {Array.isArray(deleteConfirm)
+                  ? `Are you sure you want to delete ${deleteConfirm.length === 1
+                    ? 'this selected piece'
+                    : `these ${deleteConfirm.length} selected pieces`
+                  }? This action cannot be undone.`
+                  : 'Are you sure you want to delete this piece? This action cannot be undone.'}
               </p>
             </div>
 
             <div className="flex items-center justify-end gap-2.5 pt-2">
               <button
                 type="button"
+                disabled={isDeleting}
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="button"
+                disabled={isDeleting}
                 onClick={() => handleDelete(deleteConfirm)}
-                className="px-4 py-2 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-xs transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-xs transition-colors cursor-pointer disabled:opacity-50"
               >
-                Delete
+                {isDeleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>{isDeleting ? 'Deleting...' : 'Delete'}</span>
               </button>
             </div>
           </div>

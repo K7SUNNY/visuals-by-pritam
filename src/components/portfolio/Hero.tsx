@@ -1,8 +1,16 @@
+import { useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { fadeInUp, staggerContainer } from '@/animations/variants'
 import { siteConfig } from '@/config/site'
 
 export function Hero() {
+  const scrollToSection = useCallback((id: string) => {
+    const element = document.getElementById(id)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [])
+
   return (
     <section className="relative w-full h-screen min-h-[650px] flex items-center justify-center bg-white overflow-hidden">
       {/* Animated Soft Flowing Waves (Second Image Style) - Hero Only */}
@@ -60,7 +68,7 @@ export function Hero() {
         >
           <motion.span
             variants={fadeInUp}
-            className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 block"
+            className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 block self-start"
           >
             Creative Portfolio
           </motion.span>
@@ -83,18 +91,20 @@ export function Hero() {
             variants={fadeInUp}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto"
           >
-            <a
-              href="#portfolio"
+            <button
+              type="button"
+              onClick={() => scrollToSection('portfolio')}
               className="w-full sm:w-auto inline-flex items-center justify-center px-7 py-3.5 bg-blue-600 text-white font-medium text-sm rounded-lg shadow-sm hover:bg-blue-700 transition-colors"
             >
               View Portfolio
-            </a>
-            <a
-              href="#contact"
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection('contact')}
               className="w-full sm:w-auto inline-flex items-center justify-center px-7 py-3.5 bg-white text-gray-800 font-medium text-sm rounded-lg border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors"
             >
               Get in Touch
-            </a>
+            </button>
           </motion.div>
         </motion.div>
       </div>

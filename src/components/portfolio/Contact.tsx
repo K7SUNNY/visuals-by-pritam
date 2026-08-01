@@ -7,6 +7,7 @@ import { fadeInUp, staggerContainer } from '@/animations/variants'
 import { Mail, Phone, MessageCircle } from 'lucide-react'
 import { useState } from 'react'
 import { useToast } from '@/app/providers/ToastProvider'
+import { useSettings } from '@/features/settings/hooks/useSettings'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -21,7 +22,11 @@ type ContactFormData = z.infer<typeof contactSchema>
 
 export function Contact() {
   const { success, error } = useToast()
+  const { settings, isLoading } = useSettings()
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const contactEmail = settings?.contactEmail ?? 'hello@visualsbypritam.com'
+  const contactPhone = settings?.contactPhone ?? '+1 (555) 000-0000'
 
   const {
     register,
@@ -43,6 +48,34 @@ export function Contact() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <section className="max-w-6xl mx-auto px-4 py-16 md:py-20 bg-transparent" id="contact">
+        <div className="max-w-4xl mx-auto">
+          <div className="h-8 bg-gray-200 rounded w-40 mb-8" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-white border border-gray-200/80 rounded-xl p-6 space-y-6">
+              <div className="h-4 bg-gray-200 rounded w-32" />
+              <div className="space-y-4">
+                <div className="h-16 bg-gray-100 rounded" />
+                <div className="h-16 bg-gray-100 rounded" />
+              </div>
+            </div>
+            <div className="bg-white border border-gray-200/80 rounded-xl p-6 space-y-4">
+              <div className="h-4 bg-gray-200 rounded w-32" />
+              <div className="space-y-3">
+                <div className="h-10 bg-gray-100 rounded" />
+                <div className="h-10 bg-gray-100 rounded" />
+                <div className="h-20 bg-gray-100 rounded" />
+                <div className="h-10 bg-gray-200 rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -95,7 +128,7 @@ export function Contact() {
                       Email
                     </Typography>
                     <Typography variant="body" className="text-sm font-medium text-gray-900">
-                      hello@visualsbypritam.com
+                      {contactEmail}
                     </Typography>
                   </div>
                 </div>
@@ -109,7 +142,7 @@ export function Contact() {
                       Phone
                     </Typography>
                     <Typography variant="body" className="text-sm font-medium text-gray-900">
-                      +1 (555) 000-0000
+                      {contactPhone}
                     </Typography>
                   </div>
                 </div>

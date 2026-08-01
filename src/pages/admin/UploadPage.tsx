@@ -21,6 +21,13 @@ const categoryOptions = [
   { value: 'thumbnail', label: 'Thumbnail', icon: ImageIcon },
 ]
 
+function getCategoryFromFiles(files: File[]): 'video' | 'photo' | 'banner' | 'thumbnail' {
+  if (files.length === 0) return 'photo'
+  const videoCount = files.filter((f) => f.type.startsWith('video/')).length
+  if (videoCount === files.length) return 'video'
+  return 'photo'
+}
+
 export function UploadPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -60,6 +67,7 @@ export function UploadPage() {
 
     if (validFiles.length > 0) {
       setFiles((prev) => [...prev, ...validFiles])
+      setCategory(getCategoryFromFiles(validFiles))
       validFiles.forEach((file) => {
         const url = URL.createObjectURL(file)
         setPreviews((prev) => [...prev, url])
@@ -77,6 +85,7 @@ export function UploadPage() {
 
     if (validFiles.length > 0) {
       setFiles((prev) => [...prev, ...validFiles])
+      setCategory(getCategoryFromFiles(validFiles))
       validFiles.forEach((file) => {
         const url = URL.createObjectURL(file)
         setPreviews((prev) => [...prev, url])
@@ -338,6 +347,9 @@ export function UploadPage() {
                   )
                 })}
               </div>
+              <p className="text-[10px] text-gray-400 mt-1.5">
+                Auto-detected from file type
+              </p>
             </div>
 
             {/* Featured Toggle Section */}

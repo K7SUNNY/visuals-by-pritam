@@ -11,6 +11,28 @@ import {
   AlertCircle,
 } from 'lucide-react'
 
+// Self-contained Instagram SVG Icon to avoid package import issues
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  )
+}
+
 export function SettingsPage() {
   const { settings, isLoading, isError, updateSettings, isSaving } =
     useSettings()
@@ -25,6 +47,7 @@ export function SettingsPage() {
     contactPhone: '',
     theme: 'light',
     twitter: '',
+    instagram: '',
     linkedin: '',
     github: '',
   })
@@ -39,6 +62,7 @@ export function SettingsPage() {
         contactPhone: settings?.contactPhone ?? '',
         theme: settings?.theme ?? 'light',
         twitter: settings?.socialLinks?.twitter ?? '',
+        instagram: settings?.socialLinks?.instagram ?? '',
         linkedin: settings?.socialLinks?.linkedin ?? '',
         github: settings?.socialLinks?.github ?? '',
       })
@@ -57,6 +81,7 @@ export function SettingsPage() {
         theme: formData.theme as 'light' | 'dark' | 'system',
         socialLinks: {
           twitter: formData.twitter,
+          instagram: formData.instagram,
           linkedin: formData.linkedin,
           github: formData.github,
         },
@@ -289,6 +314,33 @@ export function SettingsPage() {
                         setFormData((prev) => ({
                           ...prev,
                           twitter: e.target.value,
+                        }))
+                      }
+                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-600 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="instagram"
+                    className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2"
+                  >
+                    Instagram URL
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                      <InstagramIcon className="w-4 h-4" />
+                    </div>
+                    <input
+                      id="instagram"
+                      type="url"
+                      placeholder="https://instagram.com/yourhandle"
+                      value={formData.instagram}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          instagram: e.target.value,
                         }))
                       }
                       className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-600 transition-all"

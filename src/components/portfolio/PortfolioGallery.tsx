@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 import { Typography } from '@/components/ui/Typography'
@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { usePortfolio } from '@/features/portfolio/hooks/usePortfolio'
 import { fadeInUp, staggerContainer } from '@/animations/variants'
 import { Image as ImageIcon, Video, Search } from 'lucide-react'
+import { MediaModal } from './MediaModal'
 
 const categoryFilters = [
   { value: 'all', label: 'All' },
@@ -27,19 +28,32 @@ function CategoryIcon({ category }: { category: string }) {
   }
 }
 
+// Reliable Auto-playing Video Component
+function AutoPlayVideo({ src, className }: { src: string; className?: string }) {
+  return (
+    <video
+      src={src}
+      autoPlay
+      muted
+      loop
+      playsInline
+      className={className}
+    />
+  )
+}
+
 export function PortfolioGallery() {
   const { items, isLoading } = usePortfolio()
   const [activeFilter, setActiveFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedItem, setSelectedItem] = useState<ReturnType<typeof usePortfolio>['items'][number] | null>(null)
 
   // Safe robust filtering
   const filtered = (items || []).filter((item) => {
-    // 1. Safe Category Match
     const itemCat = (item.category || '').toLowerCase().trim()
     const matchesCategory =
       activeFilter === 'all' || itemCat === activeFilter.toLowerCase()
 
-    // 2. Safe Title & Description Search
     const query = searchQuery.toLowerCase().trim()
     const title = (item.title || '').toLowerCase()
     const description = (item.description || '').toLowerCase()
@@ -68,7 +82,8 @@ export function PortfolioGallery() {
   }
 
   return (
-    <section className="max-w-6xl mx-auto px-4 py-16 md:py-20" id="portfolio">
+    <>
+      <section className="max-w-6xl mx-auto px-4 py-16 md:py-20" id="portfolio">
       <div className="mb-8">
         <Typography
           variant="overline"
@@ -149,32 +164,29 @@ export function PortfolioGallery() {
                     padding="none"
                     shadow="sm"
                     hover
-                    className="overflow-hidden group bg-white border border-gray-200/80 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md h-full flex flex-col"
+                    className="overflow-hidden group bg-white border border-gray-200/80 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md h-full flex flex-col cursor-pointer"
+                    onClick={() => setSelectedItem(item)}
                   >
                     <div className="bg-gray-100 relative overflow-hidden aspect-video shrink-0">
-                      {displayMedia ? (
-                        itemCat === 'video' && !item.thumbnailUrl ? (
-                          <video
-                            src={item.mediaUrl}
-                            autoPlay
-                            muted
-                            loop
-                            playsInline
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                        ) : (
-                          <img
-                            src={displayMedia}
-                            alt={item.altText || item.title || 'Work sample'}
-                            loading="lazy"
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                        )
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-50">
-                          <CategoryIcon category={item.category} />
-                        </div>
-                      )}
+                       {displayMedia ? (
+                         itemCat === 'video' ? (
+                           <AutoPlayVideo
+                             src={item.mediaUrl}
+                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                           />
+                         ) : (
+                           <img
+                             src={displayMedia}
+                             alt={item.altText || item.title || 'Work sample'}
+                             loading="lazy"
+                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                           />
+                         )
+                       ) : (
+                         <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                           <CategoryIcon category={item.category} />
+                         </div>
+                       )}
                       <div className="absolute top-3 left-3 z-10">
                         <Badge
                           variant="secondary"
@@ -210,5 +222,11 @@ export function PortfolioGallery() {
         </motion.div>
       )}
     </section>
+
+    <MediaModal
+      item={selectedItem}
+      onClose={() => setSelectedItem(null)}
+    />
+    </>
   )
 }
