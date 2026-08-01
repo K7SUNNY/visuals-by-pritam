@@ -144,9 +144,9 @@ export function Footer() {
 
         <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-gray-400">
           <p>
-            &copy; {new Date().getFullYear()} {siteName}. All rights reserved.
+            &copy; <a href="https://github.com/K7SUNNY/" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600 transition-colors">K7SUNNY</a>. All rights reserved.
           </p>
-          <p>Built with React, Tailwind CSS, and Supabase</p>
+          <p>Built with Passion and Love ❤</p>
         </div>
       </div>
     </footer>
