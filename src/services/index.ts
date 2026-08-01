@@ -7,3 +7,10 @@ export {
   deletePortfolioItem,
 } from './portfolioService'
 export { getSettings, updateSettings } from './settingsService'
+export {
+  getMessages,
+  getMessageById,
+  createMessage,
+  markMessageAsRead,
+  deleteMessage,
+} from './messagesService'

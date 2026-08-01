@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Badge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { usePortfolio } from '@/features/portfolio/hooks/usePortfolio'
 import { portfolioRepository } from '@/repositories'
+import { updatePortfolioItem } from '@/services/portfolioService'
 import {
   Plus,
   Search,
@@ -19,6 +21,10 @@ import {
   CheckSquare,
   Square,
   Loader2,
+  X,
+  Calendar,
+  FileText,
+  Save,
 } from 'lucide-react'
 
 const categoryOptions = [
@@ -42,28 +48,45 @@ function WorkCard({
   description,
   category,
   status,
+  mediaUrl,
+  thumbnailUrl,
   isSelected,
   onToggleSelect,
   onDelete,
+  onClick,
 }: {
   id: string
   title: string
   description: string
   category: string
   status: string
+  mediaUrl: string
+  thumbnailUrl: string | null
   isSelected: boolean
   onToggleSelect: (id: string) => void
   onDelete: () => void
+  onClick: (item: { id: string; title: string; description: string; category: string; status: string; mediaUrl: string; thumbnailUrl: string | null }) => void
 }) {
   const CategoryIcon =
     category === 'video' ? Video : category === 'banner' ? Layers : ImageIcon
 
   return (
     <div
-      className={`p-5 rounded-xl bg-white border transition-all flex flex-col justify-between relative ${isSelected
-        ? 'border-blue-500 ring-2 ring-blue-500/10 shadow-sm'
-        : 'border-gray-200/80 shadow-sm hover:shadow-md'
+      className={`p-5 rounded-xl bg-white border transition-all flex flex-col justify-between relative cursor-pointer hover:shadow-md ${
+        isSelected
+          ? 'border-blue-500 ring-2 ring-blue-500/10 shadow-sm'
+          : 'border-gray-200/80 shadow-sm hover:shadow-md'
         }`}
+      onClick={() => onClick({ id, title, description, category, status, mediaUrl, thumbnailUrl })}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick({ id, title, description, category, status, mediaUrl, thumbnailUrl })
+        }
+      }}
+      aria-label={`View work: ${title}`}
     >
       <div>
         <div className="flex items-start justify-between gap-3 mb-3">
@@ -71,7 +94,10 @@ function WorkCard({
             {/* Checkbox for Selection */}
             <button
               type="button"
-              onClick={() => onToggleSelect(id)}
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleSelect(id)
+              }}
               className="text-gray-400 hover:text-blue-600 transition-colors cursor-pointer shrink-0"
             >
               {isSelected ? (
@@ -111,7 +137,10 @@ function WorkCard({
 
       <div className="flex items-center justify-end pt-3 border-t border-gray-100">
         <button
-          onClick={onDelete}
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete()
+          }}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
         >
           <Trash2 className="w-3.5 h-3.5" />
@@ -132,6 +161,21 @@ export function WorksPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [deleteConfirm, setDeleteConfirm] = useState<string | string[] | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [selectedWork, setSelectedWork] = useState<{
+    id: string
+    title: string
+    description: string
+    category: string
+    status: string
+    mediaUrl: string
+    thumbnailUrl: string | null
+  } | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editCategory, setEditCategory] = useState('photo')
+  const [editStatus, setEditStatus] = useState('published')
+  const [isSaving, setIsSaving] = useState(false)
 
   const { items = [], isLoading, isError, error, refetch } = usePortfolio()
 
@@ -345,6 +389,8 @@ export function WorksPage() {
               description: string
               category: string
               status: string
+              mediaUrl: string
+              thumbnailUrl: string | null
             }) => (
               <WorkCard
                 key={item.id}
@@ -353,9 +399,12 @@ export function WorksPage() {
                 description={item.description}
                 category={item.category}
                 status={item.status}
+                mediaUrl={item.mediaUrl}
+                thumbnailUrl={item.thumbnailUrl}
                 isSelected={selectedIds.includes(item.id)}
                 onToggleSelect={handleToggleSelect}
                 onDelete={() => setDeleteConfirm(item.id)}
+                onClick={setSelectedWork}
               />
             )
           )}
@@ -408,6 +457,298 @@ export function WorksPage() {
           </div>
         </div>
       )}
+
+      {/* Work Detail Modal */}
+      <AnimatePresence>
+        {selectedWork && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setSelectedWork(null)}
+          >
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+            <motion.div
+              className="relative z-10 w-full max-w-3xl bg-white rounded-2xl overflow-hidden shadow-2xl"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setSelectedWork(null)}
+                className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                aria-label="Close modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Media Section */}
+              <div className="relative bg-black flex items-center justify-center" style={{ maxHeight: '50vh' }}>
+                {selectedWork.mediaUrl ? (
+                  selectedWork.category === 'video' ? (
+                    <video
+                      src={selectedWork.mediaUrl}
+                      controls
+                      autoPlay
+                      className="max-w-full max-h-[50vh] object-contain"
+                    />
+                  ) : (
+                    <img
+                      src={selectedWork.mediaUrl}
+                      alt={selectedWork.title}
+                      className="max-w-full max-h-[50vh] object-contain"
+                    />
+                  )
+                ) : (
+                  <div className="w-full aspect-video flex items-center justify-center text-gray-400">
+                    <FolderOpen className="w-10 h-10" />
+                  </div>
+                )}
+              </div>
+
+              {/* Content Section */}
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Badge
+                    variant={selectedWork.status === 'published' ? 'default' : 'outline'}
+                    className={
+                      selectedWork.status === 'published'
+                        ? 'bg-blue-100 text-blue-700 border-blue-200'
+                        : 'text-gray-500 border-gray-200'
+                    }
+                  >
+                    {selectedWork.status}
+                  </Badge>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 capitalize">
+                    {selectedWork.category}
+                  </span>
+                </div>
+
+                <h2 className="text-xl font-bold text-gray-900 tracking-tight mb-3">
+                  {selectedWork.title}
+                </h2>
+
+                {selectedWork.description ? (
+                  <p className="text-sm text-gray-600 leading-relaxed mb-4">
+                    {selectedWork.description}
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-400 italic mb-4">
+                    No description provided.
+                  </p>
+                )}
+
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <Calendar className="w-3 h-3" />
+                  {new Date().toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </div>
+              </div>
+
+              <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => {
+                     setEditTitle(selectedWork.title)
+                     setEditDescription(selectedWork.description || '')
+                     setEditCategory(selectedWork.category)
+                     setEditStatus(selectedWork.status)
+                     setIsEditing(true)
+                  }}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  Edit Work
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    portfolioRepository.delete(selectedWork.id)
+                    queryClient.invalidateQueries({ queryKey: ['portfolio-items'] })
+                    setSelectedWork(null)
+                  }}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Work Modal */}
+      <AnimatePresence>
+        {isEditing && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setIsEditing(false)}
+          >
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+            <motion.div
+              className="relative z-10 w-full max-w-lg bg-white rounded-2xl overflow-hidden shadow-2xl"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setIsEditing(false)}
+                className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                aria-label="Close edit modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="p-6">
+                <h2 className="text-lg font-bold text-gray-900 tracking-tight mb-6">
+                  Edit Work
+                </h2>
+
+                {/* Title Field */}
+                <div className="mb-4">
+                  <label
+                    htmlFor="edit-title"
+                    className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2"
+                  >
+                    Title <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="edit-title"
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-600 transition-all"
+                    placeholder="Work title"
+                  />
+                </div>
+
+                {/* Description Field */}
+                <div className="mb-4">
+                  <label
+                    htmlFor="edit-description"
+                    className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2"
+                  >
+                    Description
+                  </label>
+                  <textarea
+                    id="edit-description"
+                    rows={3}
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-600 transition-all resize-none"
+                    placeholder="Brief description..."
+                  />
+                </div>
+
+                {/* Category Selection */}
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                    Category
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: 'video', label: 'Video', icon: Video },
+                      { value: 'photo', label: 'Photo', icon: ImageIcon },
+                      { value: 'banner', label: 'Banner', icon: Layers },
+                      { value: 'thumbnail', label: 'Thumbnail', icon: ImageIcon },
+                    ].map((opt) => {
+                      const Icon = opt.icon
+                      const isSelected = editCategory === opt.value
+
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setEditCategory(opt.value)}
+                          className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                            isSelected
+                              ? 'border-blue-600 bg-blue-50/60 text-blue-700 shadow-xs'
+                              : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                          }`}
+                        >
+                          <Icon className={`w-4 h-4 ${isSelected ? 'text-blue-600' : 'text-gray-400'}`} />
+                          <span>{opt.label}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Status Selection */}
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                    Status
+                  </label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-600 transition-all cursor-pointer"
+                  >
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Save Button */}
+              <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!editTitle.trim() || !selectedWork) return
+                    setIsSaving(true)
+                    try {
+                      await updatePortfolioItem(selectedWork.id, {
+                        title: editTitle.trim(),
+                        description: editDescription.trim(),
+                        category: editCategory as 'video' | 'photo' | 'banner' | 'thumbnail',
+                        status: editStatus as 'published' | 'draft' | 'archived',
+                      })
+                      await queryClient.invalidateQueries({ queryKey: ['portfolio-items'] })
+                      setIsEditing(false)
+                      setSelectedWork(null)
+                    } catch (err) {
+                      console.error('Update error:', err)
+                    } finally {
+                      setIsSaving(false)
+                    }
+                  }}
+                  disabled={isSaving || !editTitle.trim()}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <Save className="w-3.5 h-3.5" />
+                  <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

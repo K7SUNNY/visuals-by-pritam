@@ -18,6 +18,8 @@ export function AdminHeader({ className, onMenuClick }: AdminHeaderProps) {
         return 'Portfolio Works'
       case '/admin/upload':
         return 'Upload Content'
+      case '/admin/messages':
+        return 'Messages'
       case '/admin/settings':
         return 'Settings'
       default:

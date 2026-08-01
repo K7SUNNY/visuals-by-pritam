@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/Input'
 import { fadeInUp, staggerContainer } from '@/animations/variants'
 import { useToast } from '@/app/providers/ToastProvider'
 import { useSettings } from '@/features/settings/hooks/useSettings'
+import { createMessage } from '@/services/messagesService'
 
 const contactSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -38,10 +39,14 @@ export function ContactPage() {
     resolver: zodResolver(contactSchema),
   })
 
-  const onSubmit = async (_data: ContactFormData) => {
+  const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true)
     try {
-      // TODO: Implement actual contact form submission
+      await createMessage({
+        name: data.name,
+        email: data.email,
+        message: data.message,
+      })
       success('Message sent successfully')
       reset()
     } catch {

@@ -7,6 +7,7 @@ import {
   FolderKanban,
   UploadCloud,
   Settings,
+  Mail,
   ExternalLink,
   LogOut,
   X,
@@ -16,6 +17,7 @@ const navItems = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Works', href: '/admin/works', icon: FolderKanban },
   { label: 'Upload', href: '/admin/upload', icon: UploadCloud },
+  { label: 'Messages', href: '/admin/messages', icon: Mail },
   { label: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 

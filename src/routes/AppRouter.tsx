@@ -9,6 +9,7 @@ import { DashboardPage } from '@/pages/admin/DashboardPage'
 import { WorksPage } from '@/pages/admin/WorksPage'
 import { UploadPage } from '@/pages/admin/UploadPage'
 import { SettingsPage } from '@/pages/admin/SettingsPage'
+import { MessagesPage } from '@/pages/admin/MessagesPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { useAuth } from '@/contexts/AuthContext'
 import { ROLES } from '@/constants/config'
@@ -58,6 +59,7 @@ export function AppRouter() {
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="works" element={<WorksPage />} />
         <Route path="upload" element={<UploadPage />} />
+        <Route path="messages" element={<MessagesPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
 
