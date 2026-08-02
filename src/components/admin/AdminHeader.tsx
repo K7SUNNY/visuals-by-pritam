@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils/cn'
-import { useLocation } from 'react-router-dom'
-import { Menu } from 'lucide-react'
+import { useLocation, Link } from 'react-router-dom'
+import { Menu, Bell } from 'lucide-react'
+import { useMessages } from '@/features/messages/hooks/useMessages'
 
 interface AdminHeaderProps {
   className?: string
@@ -9,6 +10,8 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ className, onMenuClick }: AdminHeaderProps) {
   const location = useLocation()
+  const { messages } = useMessages()
+  const hasUnread = messages.some((msg) => !msg.read)
 
   const getPageTitle = () => {
     switch (location.pathname) {
@@ -44,9 +47,23 @@ export function AdminHeader({ className, onMenuClick }: AdminHeaderProps) {
         </h1>
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-blue-600" />
-        <span className="text-xs font-medium text-gray-500">Live</span>
+      <div className="flex items-center gap-4">
+        {/* Notification Bell */}
+        <Link
+          to="/admin/messages"
+          className="relative p-2 text-gray-500 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors"
+          aria-label="View messages"
+        >
+          <Bell className="w-5 h-5 text-gray-600" />
+          {hasUnread && (
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
+          )}
+        </Link>
+
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+          <span className="text-xs font-medium text-gray-500">Live</span>
+        </div>
       </div>
     </header>
   )

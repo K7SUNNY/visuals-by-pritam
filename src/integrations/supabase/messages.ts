@@ -28,14 +28,11 @@ export async function getMessageById(id: string) {
 }
 
 export async function createMessage(input: Omit<Message, 'id' | 'created_at' | 'read'>) {
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('messages')
     .insert({ ...input, read: false })
-    .select()
-    .single()
 
   if (error) throw error
-  return data as Message
 }
 
 export async function updateMessageRead(id: string, read: boolean) {

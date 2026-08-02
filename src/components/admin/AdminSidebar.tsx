@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 import { useAuth } from '@/contexts/AuthContext'
+import { useMessages } from '@/features/messages/hooks/useMessages'
 import {
   LayoutDashboard,
   FolderKanban,
@@ -30,6 +31,8 @@ export function AdminSidebar({ mobileOpen = false, onMobileClose }: AdminSidebar
   const { logout } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
+  const { messages } = useMessages()
+  const hasUnread = messages.some((msg) => !msg.read)
 
   const handleLogout = async () => {
     try {
@@ -77,14 +80,19 @@ export function AdminSidebar({ mobileOpen = false, onMobileClose }: AdminSidebar
                 to={item.href}
                 onClick={onMobileClose}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition-all',
+                  'flex items-center justify-between rounded-lg px-3.5 py-2.5 text-sm font-medium transition-all',
                   isActive
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-gray-600 hover:bg-gray-100/80 hover:text-gray-900'
                 )}
               >
-                <Icon className={cn('w-4 h-4', isActive ? 'text-white' : 'text-gray-400')} />
-                <span>{item.label}</span>
+                <div className="flex items-center gap-3">
+                  <Icon className={cn('w-4 h-4', isActive ? 'text-white' : 'text-gray-400')} />
+                  <span>{item.label}</span>
+                </div>
+                {item.label === 'Messages' && hasUnread && (
+                  <span className={cn('w-2 h-2 rounded-full bg-red-500', isActive ? 'ring-2 ring-blue-600' : 'ring-2 ring-white')} />
+                )}
               </Link>
             )
           })}
