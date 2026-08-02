@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { createUploadManager } from '@/upload/UploadManager'
@@ -11,7 +11,6 @@ import {
   Video as VideoIcon,
   X,
   Star,
-  Loader2,
   CheckCircle2,
 } from 'lucide-react'
 
@@ -29,6 +28,30 @@ function getCategoryFromFiles(files: File[]): 'video' | 'photo' | 'banner' | 'th
   return 'photo'
 }
 
+type UploadPhase = 'idle' | 'compressing' | 'uploading'
+
+let wakeLock: any = null
+
+async function acquireWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await (navigator as any).wakeLock.request('screen')
+      console.log('Wake Lock acquired')
+    }
+  } catch (err) {
+    console.warn('Failed to acquire Wake Lock:', err)
+  }
+}
+
+function releaseWakeLock() {
+  if (wakeLock) {
+    wakeLock.release().then(() => {
+      wakeLock = null
+      console.log('Wake Lock released')
+    })
+  }
+}
+
 export function UploadPage() {
   const navigate = useNavigate()
   const { success, error } = useToast()
@@ -40,8 +63,81 @@ export function UploadPage() {
   const [files, setFiles] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
   const [isDragging, setIsDragging] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
+  const [uploadPhase, setUploadPhase] = useState<UploadPhase>('idle')
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const isUploading = uploadPhase !== 'idle'
+  const [uploadProgress, setUploadProgress] = useState(0)
+
+  useEffect(() => {
+    let interval: number
+    if (isUploading) {
+      setUploadProgress(5)
+      interval = window.setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 95) {
+            return prev
+          }
+          const increment = Math.max(1, Math.floor((95 - prev) / 12))
+          return prev + increment
+        })
+      }, 250)
+    } else {
+      setUploadProgress(0)
+    }
+    return () => clearInterval(interval)
+  }, [isUploading])
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem('upload-state')
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored)
+        if (parsed.title) setTitle(parsed.title)
+        if (parsed.description) setDescription(parsed.description)
+        if (parsed.category) setCategory(parsed.category)
+        if (parsed.featured) setFeatured(parsed.featured)
+      } catch {
+        sessionStorage.removeItem('upload-state')
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isUploading) {
+      sessionStorage.setItem(
+        'upload-state',
+        JSON.stringify({ title, description, category, featured })
+      )
+    } else {
+      sessionStorage.removeItem('upload-state')
+    }
+  }, [isUploading, title, description, category, featured])
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isUploading) {
+        e.preventDefault()
+        e.returnValue = 'Your upload is in progress. Are you sure you want to leave?'
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [isUploading])
+
+  useEffect(() => {
+    if (isUploading) {
+      acquireWakeLock()
+    } else {
+      releaseWakeLock()
+    }
+
+    return () => {
+      releaseWakeLock()
+    }
+  }, [isUploading])
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -106,8 +202,18 @@ export function UploadPage() {
   const handleUpload = useCallback(async () => {
     if (files.length === 0 || !title.trim()) return
 
-    setIsUploading(true)
     const uploadManager = createUploadManager()
+    const videoFiles = files.filter((f) => f.type.startsWith('video/'))
+    const tooLarge = videoFiles.some(
+      (f) => f.size > UPLOAD_CONFIG.maxCompressedVideoSize
+    )
+
+    if (tooLarge) {
+      error('Please upload videos of 49MB or less')
+      return
+    }
+
+    setUploadPhase('uploading')
 
     try {
       for (const file of files) {
@@ -129,7 +235,7 @@ export function UploadPage() {
           description: description.trim(),
           category: category as 'video' | 'photo' | 'banner' | 'thumbnail',
           status: 'published',
-          featured: Boolean(featured), // Forces a clear boolean true/false
+          featured: Boolean(featured),
           mediaUrl,
           thumbnailUrl,
           altText: title.trim(),
@@ -140,24 +246,31 @@ export function UploadPage() {
 
       await queryClient.invalidateQueries({ queryKey: ['portfolio-items'] })
 
+      setUploadProgress(100)
+      await new Promise((resolve) => setTimeout(resolve, 600))
+
       setTitle('')
       setDescription('')
       setCategory('photo')
       setFeatured(false)
       setFiles([])
       setPreviews([])
-      success('Portfolio item created successfully')
+      setUploadPhase('idle')
+      success('Video published successfully.')
       navigate('/admin/works')
     } catch (err: any) {
-      error(err?.message || 'Failed to upload portfolio item')
-    } finally {
-      setIsUploading(false)
+      setUploadPhase('idle')
+      const message = err?.message || 'Failed to upload portfolio item'
+      if (message.includes('could not be compressed')) {
+        error(message)
+      } else {
+        error(message)
+      }
     }
-  }, [files, title, category, description, featured, navigate, queryClient])
+  }, [files, title, category, description, featured, navigate, queryClient, uploadPhase, success, error])
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
           Upload Content
@@ -168,12 +281,10 @@ export function UploadPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Media Dropzone & Previews */}
         <div className="lg:col-span-7 space-y-6">
           <div className="bg-white border border-gray-200/80 rounded-xl shadow-sm p-6 space-y-4">
             <h2 className="text-base font-bold text-gray-900">Media Files</h2>
 
-            {/* Drag and Drop Zone */}
             <div
               className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${isDragging
                 ? 'border-blue-600 bg-blue-50/50'
@@ -212,7 +323,6 @@ export function UploadPage() {
               />
             </div>
 
-            {/* File List */}
             {files.length > 0 && (
               <div className="space-y-2 pt-2">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -258,36 +368,47 @@ export function UploadPage() {
             )}
           </div>
 
-          {/* Image Previews */}
           {previews.length > 0 && (
             <div className="bg-white border border-gray-200/80 rounded-xl shadow-sm p-6">
               <h2 className="text-base font-bold text-gray-900 mb-4">
                 Media Preview
               </h2>
               <div className="grid grid-cols-2 gap-3">
-                {previews.map((preview, index) => (
-                  <div
-                    key={index}
-                    className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border border-gray-200/80"
-                  >
-                    <img
-                      src={preview}
-                      alt={`Preview ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
+                {previews.map((preview, index) => {
+                  const file = files[index]
+                  const isVideo = file?.type.startsWith('video/')
+
+                  return (
+                    <div
+                      key={index}
+                      className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 border border-gray-200/80"
+                    >
+                      {isVideo ? (
+                        <video
+                          src={preview}
+                          className="w-full h-full object-cover"
+                          muted
+                          playsInline
+                        />
+                      ) : (
+                        <img
+                          src={preview}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
         </div>
 
-        {/* Right Column: Metadata & Submit Form */}
         <div className="lg:col-span-5">
           <div className="bg-white border border-gray-200/80 rounded-xl shadow-sm p-6 space-y-5">
             <h2 className="text-base font-bold text-gray-900">Work Details</h2>
 
-            {/* Title Field */}
             <div>
               <label
                 htmlFor="title"
@@ -305,7 +426,6 @@ export function UploadPage() {
               />
             </div>
 
-            {/* Description Field */}
             <div>
               <label
                 htmlFor="description"
@@ -323,7 +443,6 @@ export function UploadPage() {
               />
             </div>
 
-            {/* Category Selection */}
             <div>
               <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
                 Category
@@ -354,7 +473,6 @@ export function UploadPage() {
               </p>
             </div>
 
-            {/* Featured Toggle Section */}
             <div className="flex items-center justify-between py-3 px-4 bg-gray-50/70 border border-gray-200/80 rounded-xl">
               <div>
                 <div className="flex items-center gap-1.5">
@@ -383,25 +501,82 @@ export function UploadPage() {
               </button>
             </div>
 
-            {/* Submit Button */}
-            <button
-              type="button"
-              onClick={handleUpload}
-              disabled={files.length === 0 || !title.trim() || isUploading}
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow-sm hover:shadow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer mt-2"
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Publishing Work...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Publish Work</span>
-                </>
-              )}
-            </button>
+            {isUploading ? (
+              <div className="w-full h-12 bg-blue-50 border border-blue-200 rounded-lg relative overflow-hidden flex items-center justify-center select-none mt-2">
+                <style>{`
+      @keyframes wave-horizontal {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-50%); }
+      }
+      .animate-wave-light {
+        animation: wave-horizontal 1.2s linear infinite;
+      }
+      .animate-wave-actual {
+        animation: wave-horizontal 0.8s linear infinite;
+      }
+    `}</style>
+
+                {/* Background filled portion */}
+                <div
+                  className="absolute top-0 left-0 bottom-0 bg-blue-600 transition-all duration-300 ease-out z-20"
+                  style={{ width: `calc(${uploadProgress}% - 6px)` }}
+                />
+
+                {/* Overlapping liquid waves at the leading edge */}
+                {uploadProgress > 0 && uploadProgress < 100 && (
+                  <>
+                    {/* Light wave (background depth) */}
+                    <div
+                      className="absolute top-0 bottom-0 w-4 overflow-hidden pointer-events-none transition-all duration-300 ease-out z-10"
+                      style={{ left: `calc(${uploadProgress}% - 10px)` }}
+                    >
+                      <svg
+                        className="absolute left-0 w-full h-[200%] text-blue-400 fill-current animate-wave-light"
+                        viewBox="0 0 16 96"
+                        preserveAspectRatio="none"
+                        style={{ top: 0 }}
+                      >
+                        {/* Seamless repeating S-curve path */}
+                        <path d="M 0 0 L 8 0 Q 16 12 8 24 T 8 48 Q 16 60 8 72 T 8 96 L 0 96 Z" />
+                      </svg>
+                    </div>
+
+                    {/* Actual wave (front layer) */}
+                    <div
+                      className="absolute top-0 bottom-0 w-3 overflow-hidden pointer-events-none transition-all duration-300 ease-out z-30"
+                      style={{ left: `calc(${uploadProgress}% - 6px)` }}
+                    >
+                      <svg
+                        className="absolute left-0 w-full h-[200%] text-blue-600 fill-current animate-wave-actual"
+                        viewBox="0 0 12 96"
+                        preserveAspectRatio="none"
+                        style={{ top: 0 }}
+                      >
+                        {/* Seamless repeating S-curve path offset */}
+                        <path d="M 0 0 L 6 0 Q 0 12 6 24 T 6 48 Q 0 60 6 72 T 6 96 L 0 96 Z" />
+                      </svg>
+                    </div>
+                  </>
+                )}
+
+                {/* Text Indicator overlay */}
+                <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold tracking-wide z-40 transition-colors duration-200">
+                  <span className={uploadProgress > 52 ? 'text-white' : 'text-blue-800'}>
+                    Uploading... {uploadProgress}%
+                  </span>
+                </span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleUpload}
+                disabled={files.length === 0 || !title.trim()}
+                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow-sm hover:shadow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer mt-2"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Publish Work</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

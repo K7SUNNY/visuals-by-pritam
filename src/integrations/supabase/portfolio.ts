@@ -1,4 +1,5 @@
 import { supabase } from './client'
+import { storage } from './storage'
 import type { PortfolioItem, PortfolioItemInput } from '@/types/portfolio'
 
 function toCamelCase(data: Record<string, unknown>): PortfolioItem {
@@ -99,10 +100,50 @@ export async function updatePortfolioItem(
 }
 
 export async function deletePortfolioItem(id: string) {
+  // 1. Fetch item to get file paths
+  const { data: item } = await supabase
+    .from('portfolio_items')
+    .select('media_url, thumbnail_url')
+    .eq('id', id)
+    .single()
+
+  // 2. Delete database record
   const { error } = await supabase
     .from('portfolio_items')
     .delete()
     .eq('id', id)
 
   if (error) throw error
+
+  // 3. Delete files from storage
+  if (item) {
+    const getPathFromUrl = (url: string | null | undefined): string | null => {
+      if (!url) return null
+      const marker = '/storage/v1/object/public/portfolio-media/'
+      const index = url.indexOf(marker)
+      if (index !== -1) {
+        return url.substring(index + marker.length)
+      }
+      return null
+    }
+
+    const mediaPath = getPathFromUrl(item.media_url)
+    const thumbnailPath = getPathFromUrl(item.thumbnail_url)
+
+    if (mediaPath) {
+      try {
+        await storage.deleteFile(mediaPath)
+      } catch (err) {
+        console.error('Failed to delete media file from storage:', err)
+      }
+    }
+
+    if (thumbnailPath && thumbnailPath !== mediaPath) {
+      try {
+        await storage.deleteFile(thumbnailPath)
+      } catch (err) {
+        console.error('Failed to delete thumbnail file from storage:', err)
+      }
+    }
+  }
 }

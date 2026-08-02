@@ -8,7 +8,7 @@ export const ROLES = {
   EDITOR: 'editor',
 } as const
 
-export const MAX_UPLOAD_SIZE = 50 * 1024 * 1024
+export const MAX_UPLOAD_SIZE = 49 * 1024 * 1024
 
 export const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
 

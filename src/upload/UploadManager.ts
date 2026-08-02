@@ -6,7 +6,7 @@ import { extractVideoMetadata } from '@/media/extractVideoMetadata'
 import { storage } from '@/integrations/supabase/storage'
 
 export interface UploadProgress {
-  stage: 'validating' | 'compressing' | 'uploading' | 'thumbnail' | 'complete'
+  stage: 'validating' | 'compressing' | 'compressing-bitrate' | 'compressing-resolution' | 'uploading' | 'thumbnail' | 'complete'
   progress: number
   message: string
 }
@@ -20,7 +20,11 @@ export interface UploadResult {
 
 export interface UploadManager {
   uploadImage(file: File, category: string): Promise<UploadResult>
-  uploadVideo(file: File, category: string): Promise<UploadResult>
+  uploadVideo(
+    file: File,
+    category: string,
+    onProgress?: (progress: UploadProgress) => void
+  ): Promise<UploadResult>
   uploadBanner(file: File): Promise<UploadResult>
 }
 
@@ -78,40 +82,66 @@ export function createUploadManager(): UploadManager {
     }
   }
 
-  async function processVideo(file: File, category: string): Promise<UploadResult> {
+  async function processVideo(
+    file: File,
+    category: string,
+    onProgress?: (progress: UploadProgress) => void
+  ): Promise<UploadResult> {
     const validation = validateVideo(file)
     if (!validation.valid) {
       throw new Error(`Video validation failed: ${validation.errors.join(', ')}`)
     }
 
+    onProgress?.({
+      stage: 'validating',
+      progress: 0,
+      message: 'Validating video...',
+    })
+
+    if (file.size > UPLOAD_CONFIG.maxCompressedVideoSize) {
+      throw new Error('Video file size exceeds the 49MB limit.')
+    }
+
+    onProgress?.({
+      stage: 'uploading',
+      progress: 0,
+      message: 'Uploading video...',
+    })
+
     const extension = file.type.split('/')[1] || 'mp4'
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`
     const path = `${UPLOAD_CONFIG.storagePaths.videos}/${fileName}`
-
+ 
     await storage.uploadFile(path, file)
-
+ 
     const mediaUrl = await storage.getPublicUrl(path)
-
+ 
     let thumbnailUrl: string | null = null
     let duration = 0
     let width = 0
     let height = 0
     let videoEl: HTMLVideoElement | null = null
     let blobUrl: string | null = null
-
+ 
     try {
+      onProgress?.({
+        stage: 'thumbnail',
+        progress: 0,
+        message: 'Generating thumbnail...',
+      })
+ 
       const meta = await extractVideoMetadata(file)
       duration = meta.duration
       width = meta.width
       height = meta.height
-
+ 
       videoEl = document.createElement('video')
       videoEl.preload = 'metadata'
       videoEl.muted = true
       videoEl.playsInline = true
-
+ 
       const el = videoEl
-
+ 
       blobUrl = URL.createObjectURL(file)
       el.src = blobUrl
 
@@ -156,7 +186,7 @@ export function createUploadManager(): UploadManager {
       const ctx = canvas.getContext('2d')
       if (ctx && videoEl) {
         ctx.drawImage(videoEl, 0, 0, UPLOAD_CONFIG.thumbnailWidth, UPLOAD_CONFIG.thumbnailHeight)
-        
+
         let thumbBlob: Blob
         if (canvas instanceof OffscreenCanvas) {
           thumbBlob = await canvas.convertToBlob({
@@ -191,6 +221,12 @@ export function createUploadManager(): UploadManager {
       }
     }
 
+    onProgress?.({
+      stage: 'complete',
+      progress: 1,
+      message: 'Video uploaded successfully',
+    })
+
     return {
       success: true,
       mediaUrl,
@@ -198,6 +234,8 @@ export function createUploadManager(): UploadManager {
       metadata: {
         originalName: file.name,
         originalSize: file.size,
+        compressedSize: file.size,
+        wasCompressed: false,
         category,
         duration,
         width,

@@ -17,8 +17,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchUser = useCallback(async () => {
-    setIsLoading(true)
+  const fetchUser = useCallback(async (isInitial = false) => {
+    if (isInitial) {
+      setIsLoading(true)
+    }
     try {
       const { data, error } = await supabase.auth.getUser()
       if (error) throw error
@@ -43,16 +45,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       setUser(null)
     } finally {
-      setIsLoading(false)
+      if (isInitial) {
+        setIsLoading(false)
+      }
     }
   }, [])
 
   useEffect(() => {
-    fetchUser()
+    fetchUser(true)
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        fetchUser()
+        fetchUser(false)
       } else {
         setUser(null)
         setIsLoading(false)

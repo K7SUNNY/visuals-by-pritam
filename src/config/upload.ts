@@ -1,6 +1,7 @@
 export const UPLOAD_CONFIG = {
   maxImageSize: 10 * 1024 * 1024,
-  maxVideoSize: 50 * 1024 * 1024,
+  maxVideoSize: 49 * 1024 * 1024,
+  maxCompressedVideoSize: 49 * 1024 * 1024,
   maxThumbnailSize: 2 * 1024 * 1024,
   supportedImageTypes: [
     'image/jpeg',
@@ -20,6 +21,11 @@ export const UPLOAD_CONFIG = {
   imageCompressionQuality: 0.85,
   maxImageDimension: 4096,
   maxVideoDimension: 1920,
+  minVideoWidth: 1280,
+  minVideoHeight: 720,
+  compressionPreset: 'fast',
+  audioOverheadFactor: 0.65,
+  minVideoBitrate: 200000,
   bucketName: 'portfolio-media',
   storagePaths: {
     videos: 'videos',

@@ -6,7 +6,6 @@ export function useRealtimeSync() {
   const queryClient = useQueryClient()
 
   useEffect(() => {
-    // 1. Subscribe to messages changes
     const messagesChannel = supabase
       .channel('messages-realtime')
       .on(
@@ -19,7 +18,6 @@ export function useRealtimeSync() {
       )
       .subscribe()
 
-    // 2. Subscribe to portfolio_items changes
     const portfolioChannel = supabase
       .channel('portfolio-realtime')
       .on(
@@ -32,7 +30,6 @@ export function useRealtimeSync() {
       )
       .subscribe()
 
-    // 3. Subscribe to settings changes
     const settingsChannel = supabase
       .channel('settings-realtime')
       .on(
@@ -45,7 +42,6 @@ export function useRealtimeSync() {
       )
       .subscribe()
 
-    // 4. Subscribe to categories changes
     const categoriesChannel = supabase
       .channel('categories-realtime')
       .on(

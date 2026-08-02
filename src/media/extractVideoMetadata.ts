@@ -13,19 +13,30 @@ export async function extractVideoMetadata(file: File): Promise<VideoMetadata> {
     video.preload = 'metadata'
 
     const cleanup = () => {
-      URL.revokeObjectURL(src)
       video.removeEventListener('loadedmetadata', onLoaded)
       video.removeEventListener('error', onError)
+      setTimeout(() => {
+        URL.revokeObjectURL(src)
+      }, 1000)
     }
 
     const onLoaded = () => {
+      const duration = video.duration || 0
+      const bitrate = duration > 0 ? Math.round((file.size * 8) / duration) : null
+
+      let frameRate: number | null = null
+      const decodedFrameCount = (video as any).webkitDecodedFrameCount
+      if (decodedFrameCount && duration > 0) {
+        frameRate = Math.round(decodedFrameCount / duration)
+      }
+
       const metadata: VideoMetadata = {
-        duration: video.duration,
+        duration,
         width: video.videoWidth,
         height: video.videoHeight,
         format: file.type,
-        bitrate: null,
-        frameRate: null,
+        bitrate,
+        frameRate,
       }
       cleanup()
       resolve(metadata)
