@@ -1,7 +1,7 @@
 export const APP_NAME = 'Visuals by Pritam'
 
 export const APP_DESCRIPTION =
-  'A premium creative portfolio CMS for showcasing visual work'
+  'Visual portfolio of Director, Content Manager and Video Editor'
 
 export const ROLES = {
   ADMIN: 'admin',

@@ -2,8 +2,10 @@ import { useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { fadeInUp, staggerContainer } from '@/animations/variants'
 import { siteConfig } from '@/config/site'
+import { useSettings } from '@/features/settings/hooks/useSettings'
 
 export function Hero() {
+  const { settings } = useSettings()
   const scrollToSection = useCallback((id: string) => {
     const element = document.getElementById(id)
     if (element) {
@@ -77,14 +79,14 @@ export function Hero() {
             variants={fadeInUp}
             className="text-5xl sm:text-7xl md:text-8xl font-cheri font-normal text-gray-900 tracking-wide mb-6 leading-none max-w-4xl"
           >
-            Visuals by Pritam
+            {settings?.siteName || 'Visuals by Pritam'}
           </motion.h1>
 
           <motion.p
             variants={fadeInUp}
             className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed font-normal"
           >
-            {siteConfig.description}
+            {settings?.tagline || siteConfig.tagline}
           </motion.p>
 
           <motion.div

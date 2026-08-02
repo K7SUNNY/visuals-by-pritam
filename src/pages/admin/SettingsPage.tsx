@@ -78,7 +78,7 @@ export function SettingsPage() {
         description: formData.description,
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone,
-        theme: formData.theme as 'light' | 'dark' | 'system',
+        theme: 'light',
         socialLinks: {
           twitter: formData.twitter,
           instagram: formData.instagram,
@@ -405,7 +405,7 @@ export function SettingsPage() {
             </div>
 
             {/* Appearance Card */}
-            <div className="bg-white border border-gray-200/80 rounded-xl shadow-sm p-6 space-y-4">
+            {/* <div className="bg-white border border-gray-200/80 rounded-xl shadow-sm p-6 space-y-4">
               <h2 className="text-base font-bold text-gray-900">
                 Appearance
               </h2>
@@ -433,7 +433,7 @@ export function SettingsPage() {
                   <option value="system">System Preference</option>
                 </select>
               </div>
-            </div>
+            </div> */}
 
             {/* Submit Button */}
             <div className="flex justify-end pt-2">

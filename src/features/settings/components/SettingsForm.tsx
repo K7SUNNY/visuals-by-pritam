@@ -27,7 +27,7 @@ export function SettingsForm() {
       description: '',
       contactEmail: '',
       contactPhone: '',
-      theme: 'system',
+      theme: 'light',
     },
   })
 
@@ -80,7 +80,7 @@ export function SettingsForm() {
           <p className="text-sm text-destructive mt-1">{errors.contactEmail.message}</p>
         )}
       </div>
-      <div>
+      {/* <div>
         <label htmlFor="theme" className="block text-sm font-medium mb-1">
           Theme
         </label>
@@ -93,7 +93,7 @@ export function SettingsForm() {
           <option value="dark">Dark</option>
           <option value="system">System</option>
         </select>
-      </div>
+      </div> */}
       <Button type="submit" disabled={isSaving}>
         {isSaving ? 'Saving...' : 'Save Settings'}
       </Button>

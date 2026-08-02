@@ -1,9 +1,11 @@
 import { Link, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils/cn'
 import { useState, useEffect } from 'react'
+import { useSettings } from '@/features/settings/hooks/useSettings'
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false)
+  const { settings } = useSettings()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,7 +26,7 @@ export function Header() {
     >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between relative">
         <Link to="/" className="font-heading font-semibold text-lg tracking-tight z-10">
-          Visuals by Pritam
+          {settings?.siteName || 'Visuals by Pritam'}
         </Link>
 
         {/* Absolutely centered navigation links */}

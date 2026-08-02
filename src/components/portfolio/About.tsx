@@ -2,9 +2,12 @@ import { motion } from 'framer-motion'
 import { Typography } from '@/components/ui/Typography'
 import { Card } from '@/components/ui/Card'
 import { fadeInUp } from '@/animations/variants'
-import { siteConfig } from '@/config/site'
+import { useSettings } from '@/features/settings/hooks/useSettings'
 
 export function About() {
+  const { settings } = useSettings()
+  const displayDescription = settings?.description || "I am a visual storyteller and director specializing in cinematic imagery, video production, and fine art photography. I believe that every frame has a story to tell. By blending light, emotion, and technical craft, I collaborate with brands and creators to build visual experiences that feel authentic, memorable, and alive."
+
   return (
     <section className="max-w-6xl mx-auto px-4 py-16 md:py-20 bg-transparent" id="about">
       <div className="max-w-3xl mx-auto">
@@ -48,10 +51,7 @@ export function About() {
               color="secondary"
               className="text-gray-600 leading-relaxed text-base sm:text-lg"
             >
-              {siteConfig.description}. I create visual experiences
-              that blend creativity with technology. Each project is
-              crafted with attention to detail and a focus on delivering
-              impactful results.
+              {displayDescription}
             </Typography>
           </Card>
         </motion.div>
