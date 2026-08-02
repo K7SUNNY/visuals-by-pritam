@@ -32,7 +32,14 @@ export async function compressImage(
   const newWidth = Math.round(width * ratio)
   const newHeight = Math.round(height * ratio)
 
-  const canvas = new OffscreenCanvas(newWidth, newHeight)
+  let canvas: OffscreenCanvas | HTMLCanvasElement
+  if (typeof OffscreenCanvas !== 'undefined') {
+    canvas = new OffscreenCanvas(newWidth, newHeight)
+  } else {
+    canvas = document.createElement('canvas')
+    canvas.width = newWidth
+    canvas.height = newHeight
+  }
   const ctx = canvas.getContext('2d')
 
   if (!ctx) {
@@ -42,10 +49,24 @@ export async function compressImage(
   ctx.drawImage(bitmap, 0, 0, newWidth, newHeight)
   bitmap.close()
 
-  const blob = await canvas.convertToBlob({
-    type: format,
-    quality,
-  })
+  let blob: Blob
+  if (canvas instanceof OffscreenCanvas) {
+    blob = await canvas.convertToBlob({
+      type: format,
+      quality,
+    })
+  } else {
+    blob = await new Promise<Blob>((resolve, reject) => {
+      (canvas as HTMLCanvasElement).toBlob(
+        (b) => {
+          if (b) resolve(b)
+          else reject(new Error('Canvas toBlob failed'))
+        },
+        format,
+        quality
+      )
+    })
+  }
 
   return {
     blob,

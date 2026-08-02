@@ -61,7 +61,8 @@ export async function getPortfolioItemById(id: string) {
     .eq('id', id)
     .maybeSingle()
 
-  if (error || !data) throw error
+  if (error) throw error
+  if (!data) throw new Error('Portfolio item not found')
   return toCamelCase(data as Record<string, unknown>)
 }
 

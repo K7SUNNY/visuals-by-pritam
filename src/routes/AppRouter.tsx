@@ -36,6 +36,24 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function GuestRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    )
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/admin/dashboard" replace />
+  }
+
+  return <>{children}</>
+}
+
 export function AppRouter() {
   return (
     <Routes>
@@ -45,7 +63,14 @@ export function AppRouter() {
         <Route path="/contact" element={<ContactPage />} />
       </Route>
 
-      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/login"
+        element={
+          <GuestRoute>
+            <LoginPage />
+          </GuestRoute>
+        }
+      />
 
       <Route
         path="/admin"

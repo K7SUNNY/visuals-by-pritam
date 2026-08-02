@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { createUploadManager } from '@/upload/UploadManager'
 import { UPLOAD_CONFIG } from '@/config/upload'
 import { createPortfolioItem } from '@/services/portfolioService'
+import { useToast } from '@/app/providers/ToastProvider'
 import {
   Upload,
   Image as ImageIcon,
@@ -30,6 +31,7 @@ function getCategoryFromFiles(files: File[]): 'video' | 'photo' | 'banner' | 'th
 
 export function UploadPage() {
   const navigate = useNavigate()
+  const { success, error } = useToast()
   const queryClient = useQueryClient()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -144,13 +146,13 @@ export function UploadPage() {
       setFeatured(false)
       setFiles([])
       setPreviews([])
+      success('Portfolio item created successfully')
       navigate('/admin/works')
-    } catch {
-      // Toast error handling
+    } catch (err: any) {
+      error(err?.message || 'Failed to upload portfolio item')
     } finally {
       setIsUploading(false)
     }
-    // ADD `featured` AND `queryClient` TO THE DEPENDENCY ARRAY HERE:
   }, [files, title, category, description, featured, navigate, queryClient])
 
   return (

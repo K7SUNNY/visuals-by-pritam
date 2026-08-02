@@ -1,7 +1,6 @@
 -- Create the profiles table
 create table profiles (
   id uuid references auth.users on delete cascade primary key,
-  user_id uuid references auth.users not null,
   role text not null default 'admin' check (role in ('admin', 'editor')),
   display_name text,
   email text,
@@ -115,7 +114,7 @@ alter table portfolio_items enable row level security;
 
 create policy "Published portfolio items are viewable by everyone"
 on portfolio_items for select
-using (status = 'published');
+using (status = 'published' or auth.role() = 'authenticated');
 
 create policy "Authenticated users can insert portfolio items"
 on portfolio_items for insert
@@ -166,9 +165,8 @@ using (
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, user_id, role, display_name, email)
+  insert into public.profiles (id, role, display_name, email)
   values (
-    new.id,
     new.id,
     'admin',
     coalesce(new.raw_user_meta_data->>'full_name', new.email),

@@ -1,8 +1,4 @@
-import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { z } from 'zod'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Mail, Phone, MessageCircle } from 'lucide-react'
 
 import { Typography } from '@/components/ui/Typography'
@@ -10,51 +6,21 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { fadeInUp, staggerContainer } from '@/animations/variants'
-import { useToast } from '@/app/providers/ToastProvider'
 import { useSettings } from '@/features/settings/hooks/useSettings'
-import { createMessage } from '@/services/messagesService'
-
-const contactSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Invalid email address'),
-  message: z.string().min(1, 'Message is required').max(1000),
-})
-
-type ContactFormData = z.infer<typeof contactSchema>
+import { useContact } from '@/features/contact/hooks/useContact'
 
 export function ContactPage() {
-  const { success, error } = useToast()
   const { settings, isLoading } = useSettings()
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const {
+    register,
+    onSubmit,
+    isSubmitting,
+    formState: { errors },
+  } = useContact()
 
   const contactEmail = settings?.contactEmail ?? 'hello@visualsbypritam.com'
   const contactPhone = settings?.contactPhone ?? '+1 (555) 000-0000'
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<ContactFormData>({
-    resolver: zodResolver(contactSchema),
-  })
-
-  const onSubmit = async (data: ContactFormData) => {
-    setIsSubmitting(true)
-    try {
-      await createMessage({
-        name: data.name,
-        email: data.email,
-        message: data.message,
-      })
-      success('Message sent successfully')
-      reset()
-    } catch {
-      error('Failed to send message')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
 
   if (isLoading) {
     return (
@@ -194,7 +160,7 @@ export function ContactPage() {
                   Send a Message
                 </Typography>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={onSubmit} className="space-y-4">
                   <Input
                     label="Name"
                     placeholder="Your name"

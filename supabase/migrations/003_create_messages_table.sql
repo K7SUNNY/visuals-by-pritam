@@ -4,28 +4,53 @@ create table if not exists public.messages (
   email text not null,
   message text not null,
   read boolean not null default false,
-  created_at timestamp with time zone default now() not null
+  created_at timestamp with time zone default now() not null,
+  updated_at timestamp with time zone default now() not null
 );
 
 alter table public.messages enable row level security;
 
-create policy "Allow authenticated users to read messages"
+create policy "Allow anyone to insert messages"
+  on public.messages for insert
+  to public
+  with check (true);
+
+create policy "Allow admins and editors to read messages"
   on public.messages for select
   to authenticated
-  using (true);
+  using (
+    exists (
+      select 1 from public.profiles
+      where public.profiles.id = auth.uid()
+      and public.profiles.role in ('admin', 'editor')
+    )
+  );
 
-create policy "Allow authenticated users to insert messages"
-  on public.messages for insert
-  to authenticated
-  with check (true);
-
-create policy "Allow authenticated users to update messages"
+create policy "Allow admins and editors to update messages"
   on public.messages for update
   to authenticated
-  using (true)
-  with check (true);
+  using (
+    exists (
+      select 1 from public.profiles
+      where public.profiles.id = auth.uid()
+      and public.profiles.role in ('admin', 'editor')
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.profiles
+      where public.profiles.id = auth.uid()
+      and public.profiles.role in ('admin', 'editor')
+    )
+  );
 
-create policy "Allow authenticated users to delete messages"
+create policy "Allow admins to delete messages"
   on public.messages for delete
   to authenticated
-  using (true);
+  using (
+    exists (
+      select 1 from public.profiles
+      where public.profiles.id = auth.uid()
+      and public.profiles.role = 'admin'
+    )
+  );

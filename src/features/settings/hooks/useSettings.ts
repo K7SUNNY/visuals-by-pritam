@@ -22,7 +22,7 @@ export function useSettings() {
     isLoading: settingsQuery.isLoading,
     isError: settingsQuery.isError,
     error: settingsQuery.error,
-    updateSettings: updateSettingsMutation.mutate,
+    updateSettings: updateSettingsMutation.mutateAsync,
     isSaving: updateSettingsMutation.isPending,
   }
 }

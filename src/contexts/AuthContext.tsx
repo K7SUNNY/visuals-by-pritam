@@ -18,6 +18,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   const fetchUser = useCallback(async () => {
+    setIsLoading(true)
     try {
       const { data, error } = await supabase.auth.getUser()
       if (error) throw error
@@ -29,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .eq('id', data.user.id)
           .single()
 
-        const role = profile?.data?.role ?? 'admin'
+        const role = profile?.data?.role ?? null
 
         setUser({
           id: data.user.id,
@@ -80,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .eq('id', data.user.id)
           .single()
 
-        const role = profile?.data?.role ?? 'admin'
+        const role = profile?.data?.role ?? null
 
         setUser({
           id: data.user.id,

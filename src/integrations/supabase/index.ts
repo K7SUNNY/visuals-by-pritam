@@ -9,3 +9,10 @@ export {
   deletePortfolioItem,
 } from './portfolio'
 export { getSettings, updateSettings } from './settings'
+export {
+  getMessages,
+  getMessageById,
+  createMessage,
+  updateMessageRead,
+  deleteMessage,
+} from './messages'

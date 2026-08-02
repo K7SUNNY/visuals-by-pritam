@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useToast } from '@/app/providers/ToastProvider'
 import { Badge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -154,12 +155,13 @@ function WorkCard({
 export function WorksPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { success, error } = useToast()
 
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [deleteConfirm, setDeleteConfirm] = useState<string | string[] | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<string[] | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [selectedWork, setSelectedWork] = useState<{
     id: string
@@ -173,11 +175,11 @@ export function WorksPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editDescription, setEditDescription] = useState('')
-  const [editCategory, setEditCategory] = useState('photo')
-  const [editStatus, setEditStatus] = useState('published')
+  const [editCategory, setEditCategory] = useState<'video' | 'photo' | 'banner' | 'thumbnail'>('photo')
+  const [editStatus, setEditStatus] = useState<'published' | 'draft' | 'archived'>('published')
   const [isSaving, setIsSaving] = useState(false)
 
-  const { items = [], isLoading, isError, error, refetch } = usePortfolio()
+  const { items = [], isLoading, isError, error: portfolioError, refetch } = usePortfolio()
 
   const filtered = items.filter(
     (item: { title: string; description: string; category: string; status: string }) => {
@@ -209,24 +211,17 @@ export function WorksPage() {
   }
 
   // Handle single or bulk deletion with instant refresh & auto-close
-  const handleDelete = async (target: string | string[]) => {
+  const handleDelete = async (target: string[]) => {
     setIsDeleting(true)
     try {
-      if (Array.isArray(target)) {
-        await Promise.all(target.map((id) => portfolioRepository.delete(id)))
-        setSelectedIds([])
-      } else {
-        await portfolioRepository.delete(target)
-        setSelectedIds((prev) => prev.filter((id) => id !== target))
-      }
-
-      // 1. Instantly invalidate cache and trigger re-fetch
+      await Promise.all(target.map((id) => portfolioRepository.delete(id)))
+      setSelectedIds((prev) => prev.filter((id) => !target.includes(id)))
       await queryClient.invalidateQueries({ queryKey: ['portfolio-items'] })
-      await refetch()
-    } catch (err) {
+      success(`Successfully deleted ${target.length} ${target.length === 1 ? 'item' : 'items'}`)
+    } catch (err: any) {
       console.error('Delete error:', err)
+      error(err?.message || 'Failed to delete selected items')
     } finally {
-      // 2. GUARANTEED MODAL CLOSE
       setIsDeleting(false)
       setDeleteConfirm(null)
     }
@@ -250,7 +245,7 @@ export function WorksPage() {
       <div className="max-w-6xl mx-auto py-8">
         <ErrorState
           title="Failed to load works"
-          message={error?.message}
+          message={portfolioError?.message}
           onRetry={() => refetch()}
         />
       </div>
@@ -403,7 +398,7 @@ export function WorksPage() {
                 thumbnailUrl={item.thumbnailUrl}
                 isSelected={selectedIds.includes(item.id)}
                 onToggleSelect={handleToggleSelect}
-                onDelete={() => setDeleteConfirm(item.id)}
+                onDelete={() => setDeleteConfirm([item.id])}
                 onClick={setSelectedWork}
               />
             )
@@ -421,17 +416,13 @@ export function WorksPage() {
           <div className="relative z-10 w-full max-w-sm rounded-xl bg-white shadow-xl border border-gray-200 p-6 space-y-4">
             <div>
               <h3 className="text-base font-bold text-gray-900">
-                {Array.isArray(deleteConfirm)
-                  ? `Delete ${deleteConfirm.length} ${deleteConfirm.length === 1 ? 'Work' : 'Works'}`
-                  : 'Delete Work'}
+                {`Delete ${deleteConfirm.length} ${deleteConfirm.length === 1 ? 'Work' : 'Works'}`}
               </h3>
               <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
-                {Array.isArray(deleteConfirm)
-                  ? `Are you sure you want to delete ${deleteConfirm.length === 1
-                    ? 'this selected piece'
-                    : `these ${deleteConfirm.length} selected pieces`
-                  }? This action cannot be undone.`
-                  : 'Are you sure you want to delete this piece? This action cannot be undone.'}
+                {`Are you sure you want to delete ${deleteConfirm.length === 1
+                  ? 'this selected piece'
+                  : `these ${deleteConfirm.length} selected pieces`
+                }? This action cannot be undone.`}
               </p>
             </div>
 
@@ -557,11 +548,11 @@ export function WorksPage() {
                 <button
                   type="button"
                   onClick={() => {
-                     setEditTitle(selectedWork.title)
-                     setEditDescription(selectedWork.description || '')
-                     setEditCategory(selectedWork.category)
-                     setEditStatus(selectedWork.status)
-                     setIsEditing(true)
+                      setEditTitle(selectedWork.title)
+                      setEditDescription(selectedWork.description || '')
+                      setEditCategory(selectedWork.category as any)
+                      setEditStatus(selectedWork.status as any)
+                      setIsEditing(true)
                   }}
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                 >
@@ -570,9 +561,8 @@ export function WorksPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    portfolioRepository.delete(selectedWork.id)
-                    queryClient.invalidateQueries({ queryKey: ['portfolio-items'] })
+                  onClick={async () => {
+                    await handleDelete([selectedWork.id])
                     setSelectedWork(null)
                   }}
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
@@ -675,7 +665,7 @@ export function WorksPage() {
                         <button
                           key={opt.value}
                           type="button"
-                          onClick={() => setEditCategory(opt.value)}
+                          onClick={() => setEditCategory(opt.value as any)}
                           className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
                             isSelected
                               ? 'border-blue-600 bg-blue-50/60 text-blue-700 shadow-xs'
@@ -697,7 +687,7 @@ export function WorksPage() {
                   </label>
                   <select
                     value={editStatus}
-                    onChange={(e) => setEditStatus(e.target.value)}
+                    onChange={(e) => setEditStatus(e.target.value as any)}
                     className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-600 transition-all cursor-pointer"
                   >
                     <option value="published">Published</option>
@@ -725,8 +715,8 @@ export function WorksPage() {
                       await updatePortfolioItem(selectedWork.id, {
                         title: editTitle.trim(),
                         description: editDescription.trim(),
-                        category: editCategory as 'video' | 'photo' | 'banner' | 'thumbnail',
-                        status: editStatus as 'published' | 'draft' | 'archived',
+                        category: editCategory,
+                        status: editStatus,
                       })
                       await queryClient.invalidateQueries({ queryKey: ['portfolio-items'] })
                       setIsEditing(false)

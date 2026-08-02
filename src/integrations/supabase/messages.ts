@@ -22,7 +22,8 @@ export async function getMessageById(id: string) {
     .eq('id', id)
     .maybeSingle()
 
-  if (error || !data) throw error
+  if (error) throw error
+  if (!data) throw new Error('Message not found')
   return data as Message
 }
 

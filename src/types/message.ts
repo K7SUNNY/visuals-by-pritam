@@ -5,4 +5,5 @@ export interface Message {
   message: string
   read: boolean
   created_at: string
+  updated_at?: string
 }

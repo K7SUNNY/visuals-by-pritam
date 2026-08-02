@@ -93,55 +93,102 @@ export function createUploadManager(): UploadManager {
     const mediaUrl = await storage.getPublicUrl(path)
 
     let thumbnailUrl: string | null = null
-    try {
-      await extractVideoMetadata(file)
-      const videoEl = document.createElement('video')
-      videoEl.preload = 'metadata'
+    let duration = 0
+    let width = 0
+    let height = 0
+    let videoEl: HTMLVideoElement | null = null
+    let blobUrl: string | null = null
 
-      const blobUrl = URL.createObjectURL(file)
-      videoEl.src = blobUrl
+    try {
+      const meta = await extractVideoMetadata(file)
+      duration = meta.duration
+      width = meta.width
+      height = meta.height
+
+      videoEl = document.createElement('video')
+      videoEl.preload = 'metadata'
+      videoEl.muted = true
+      videoEl.playsInline = true
+
+      const el = videoEl
+
+      blobUrl = URL.createObjectURL(file)
+      el.src = blobUrl
 
       await new Promise<void>((resolve, reject) => {
+        let timeoutId: number
+
         const onLoaded = () => {
-          videoEl.removeEventListener('loadeddata', onLoaded)
-          videoEl.removeEventListener('error', onError)
+          cleanupListeners()
           resolve()
         }
         const onError = () => {
-          videoEl.removeEventListener('loadeddata', onLoaded)
-          videoEl.removeEventListener('error', onError)
+          cleanupListeners()
           reject(new Error('Failed to load video for thumbnail'))
         }
-        videoEl.addEventListener('loadeddata', onLoaded)
-        videoEl.addEventListener('error', onError)
-        setTimeout(() => {
-          videoEl.removeEventListener('loadeddata', onLoaded)
-          videoEl.removeEventListener('error', onError)
+        const cleanupListeners = () => {
+          clearTimeout(timeoutId)
+          el.removeEventListener('loadeddata', onLoaded)
+          el.removeEventListener('error', onError)
+        }
+
+        el.addEventListener('loadeddata', onLoaded)
+        el.addEventListener('error', onError)
+
+        timeoutId = window.setTimeout(() => {
+          cleanupListeners()
           reject(new Error('Video thumbnail timeout'))
-        }, 10000)
+        }, 15000)
       })
 
-      const canvas = new OffscreenCanvas(
-        UPLOAD_CONFIG.thumbnailWidth,
-        UPLOAD_CONFIG.thumbnailHeight
-      )
+      let canvas: OffscreenCanvas | HTMLCanvasElement
+      if (typeof OffscreenCanvas !== 'undefined') {
+        canvas = new OffscreenCanvas(
+          UPLOAD_CONFIG.thumbnailWidth,
+          UPLOAD_CONFIG.thumbnailHeight
+        )
+      } else {
+        canvas = document.createElement('canvas')
+        canvas.width = UPLOAD_CONFIG.thumbnailWidth
+        canvas.height = UPLOAD_CONFIG.thumbnailHeight
+      }
+
       const ctx = canvas.getContext('2d')
-      if (ctx) {
+      if (ctx && videoEl) {
         ctx.drawImage(videoEl, 0, 0, UPLOAD_CONFIG.thumbnailWidth, UPLOAD_CONFIG.thumbnailHeight)
-        const thumbBlob = await canvas.convertToBlob({
-          type: 'image/webp',
-          quality: UPLOAD_CONFIG.thumbnailQuality,
-        })
+        
+        let thumbBlob: Blob
+        if (canvas instanceof OffscreenCanvas) {
+          thumbBlob = await canvas.convertToBlob({
+            type: 'image/webp',
+            quality: UPLOAD_CONFIG.thumbnailQuality,
+          })
+        } else {
+          thumbBlob = await new Promise<Blob>((resolve, reject) => {
+            (canvas as HTMLCanvasElement).toBlob(
+              (b) => b ? resolve(b) : reject(new Error('Thumbnail canvas toBlob failed')),
+              'image/webp',
+              UPLOAD_CONFIG.thumbnailQuality
+            )
+          })
+        }
 
         const thumbFileName = `thumb-${fileName}`
         const thumbPath = `${UPLOAD_CONFIG.storagePaths.thumbnails}/${thumbFileName}`
         await storage.uploadFile(thumbPath, blobToFile(thumbBlob, thumbFileName))
         thumbnailUrl = await storage.getPublicUrl(thumbPath)
       }
-
-      URL.revokeObjectURL(blobUrl)
-    } catch {
+    } catch (err) {
+      console.error('Error generating video thumbnail:', err)
       thumbnailUrl = null
+    } finally {
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl)
+      }
+      if (videoEl) {
+        videoEl.src = ''
+        videoEl.load()
+      }
     }
 
     return {
@@ -152,7 +199,9 @@ export function createUploadManager(): UploadManager {
         originalName: file.name,
         originalSize: file.size,
         category,
-        duration: 0,
+        duration,
+        width,
+        height,
       },
     }
   }

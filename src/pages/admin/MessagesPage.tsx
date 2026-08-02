@@ -19,6 +19,7 @@ import {
   User,
   AtSign,
   Calendar,
+  Loader2,
 } from 'lucide-react'
 
 const statusOptions = [
@@ -46,14 +47,17 @@ function MessageRow({
   onClick: (message: { id: string; name: string; email: string; message: string; read: boolean; created_at: string }) => void
 }) {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const handleDelete = async () => {
+    setIsDeleting(true)
     try {
       await messagesRepository.delete(message.id)
       onDelete(message.id)
     } catch (err) {
       console.error('Delete error:', err)
     } finally {
+      setIsDeleting(false)
       setConfirmingDelete(false)
     }
   }
@@ -149,15 +153,18 @@ function MessageRow({
           <div className="flex items-center gap-1">
             <button
               type="button"
+              disabled={isDeleting}
               onClick={handleDelete}
-              className="px-2 py-1 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded transition-colors cursor-pointer"
+              className="px-2 py-1 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded transition-colors cursor-pointer disabled:opacity-50 inline-flex items-center gap-1"
             >
+              {isDeleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               Yes
             </button>
             <button
               type="button"
+              disabled={isDeleting}
               onClick={() => setConfirmingDelete(false)}
-              className="px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+              className="px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 rounded transition-colors cursor-pointer disabled:opacity-50"
             >
               No
             </button>
@@ -350,9 +357,13 @@ export function MessagesPage() {
             <MessageRow
               key={msg.id}
               message={msg}
-              onMarkRead={(id, read) => {
-                messagesRepository.markAsRead(id, read)
-                queryClient.invalidateQueries({ queryKey: ['messages'] })
+              onMarkRead={async (id, read) => {
+                try {
+                  await messagesRepository.markAsRead(id, read)
+                  await queryClient.invalidateQueries({ queryKey: ['messages'] })
+                } catch (err) {
+                  console.error('Error marking as read:', err)
+                }
               }}
               onDelete={() => {
                 queryClient.invalidateQueries({ queryKey: ['messages'] })

@@ -1,7 +1,7 @@
 export interface AuthUser {
   id: string
   email: string
-  role: 'admin' | 'editor'
+  role: 'admin' | 'editor' | null
   displayName: string
   avatarUrl: string | null
 }

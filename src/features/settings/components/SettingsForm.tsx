@@ -5,12 +5,14 @@ import { siteSettingsSchema } from '@/lib/validations/settings'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useToast } from '@/app/providers/ToastProvider'
+import { useSettings } from '../hooks/useSettings'
 import type { z } from 'zod'
 
 type SettingsFormData = z.infer<typeof siteSettingsSchema>
 
 export function SettingsForm() {
   const { success, error } = useToast()
+  const { updateSettings } = useSettings()
   const [isSaving, setIsSaving] = useState(false)
 
   const {
@@ -29,10 +31,18 @@ export function SettingsForm() {
     },
   })
 
-  const onSubmit = async (_data: SettingsFormData) => {
+  const onSubmit = async (data: SettingsFormData) => {
     setIsSaving(true)
     try {
-      // TODO: Implement actual settings save
+      await updateSettings({
+        siteName: data.siteName,
+        tagline: data.tagline,
+        description: data.description || '',
+        contactEmail: data.contactEmail,
+        contactPhone: data.contactPhone || '',
+        theme: data.theme,
+        socialLinks: {},
+      })
       success('Settings saved successfully')
     } catch {
       error('Failed to save settings')

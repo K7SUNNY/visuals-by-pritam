@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Italiana&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
 @import "tailwindcss";
+@import "./styles/tokens.css";
 
 @theme {
   --font-cheri: "TAN Mon Cheri", "TAN - MON CHERI", "Italiana", "Bodoni Moda", "Playfair Display", serif;

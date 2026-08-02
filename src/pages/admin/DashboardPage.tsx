@@ -37,7 +37,7 @@ function StatCard({
 }
 
 export function DashboardPage() {
-  const { portfolioItems: items = [], isLoading } = useDashboard()
+  const { portfolioItems: items, isLoading } = useDashboard()
 
   const totalWorks = items.length
   const videos = items.filter((i) => i.category === 'video').length
