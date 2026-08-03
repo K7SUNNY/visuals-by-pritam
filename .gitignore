@@ -42,3 +42,7 @@ node_modules/.cache
 # Others
 txt
 txt.txt
+
+# AI agent local configurations
+.agents/
+.claude/
